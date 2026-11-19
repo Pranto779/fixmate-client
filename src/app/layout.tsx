@@ -36,9 +36,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           closeButton
           expand={false}
           toastOptions={{
-            duration: 5000,
+            duration: 2000,
             style: {
-              borderRadius: "8px",
+              borderRadius: "10px",
               background: "#243b53",
               color: "#ffffff",
             },

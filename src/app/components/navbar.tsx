@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { authClient, useSession } from "@/lib/auth-client";
+import { toast } from "sonner";
 
 // ================= USER SKELETON =================
 
@@ -87,18 +88,13 @@ const Navbar = () => {
     { name: "Contact", href: "/contact" },
   ];
 
-  // Dashboard Based on Role
-  const dashboardLink =
-    user?.role === "admin"
-      ? "/admin"
-      : user?.role === "technician"
-        ? "/technician"
-        : "/customer";
+  // /dashboard redirects to the role-based dashboard
+  const dashboardLink = "/dashboard";
 
   // Logout
   const handleLogout = async () => {
     await authClient.signOut();
-
+toast.success("Signed out successfully!");
     setDropdownOpen(false);
     setOpen(false);
 

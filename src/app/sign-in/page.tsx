@@ -48,8 +48,8 @@ password: userdata.password,
     console.log("Sign In Data:", userdata);
 
     if (data) {
-      toast.success("Sign In Successful!");  
-      router.push("/"); // Redirect to dashboard or any other page after successful sign-in
+      toast.success("Sign In Successful!");
+      router.push("/dashboard"); // /dashboard redirects to the role-based dashboard
     }else {
       toast.error("Sign In Failed. Please check your credentials.");
     }
