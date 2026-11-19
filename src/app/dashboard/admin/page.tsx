@@ -6,9 +6,9 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-import DashboardShell from "@/components/dashboard/dashboard-shell";
-import StatCard from "@/components/dashboard/stat-card";
-import ListCard, { type ListItem } from "@/components/dashboard/list-card";
+import DashboardShell from "@/app/dashboard/dashboard-component/dashboard-shell";
+import StatCard from "@/app/dashboard/dashboard-component/stat-card";
+import ListCard, { type ListItem } from "@/app/dashboard/dashboard-component/list-card";
 
 // ================= DUMMY DATA =================
 // Replace with real API data later — the shell stays the same.

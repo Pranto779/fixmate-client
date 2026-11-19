@@ -1,8 +1,8 @@
 import React from "react";
 import { Inbox } from "lucide-react";
 
-import DashboardShell from "@/components/dashboard/dashboard-shell";
-import EmptyState from "@/components/dashboard/empty-state";
+import DashboardShell from "@/app/dashboard/dashboard-component/dashboard-shell";
+import EmptyState from "@/app/dashboard/dashboard-component/empty-state";
 
 // ================= TECHNICIAN · REQUESTS =================
 
