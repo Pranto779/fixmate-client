@@ -25,50 +25,71 @@ import {
 const slides = [
   {
     title: "Mobile Repair Service",
-    subtitle:
-      "Fast and reliable smartphone repair service. We fix display, battery, charging and other mobile issues.",
+    highlight: "Mobile Repair",
+    subtitle: "Fast and reliable smartphone repair service.",
+    description:
+      "We provide expert smartphone repair services, including display replacement, battery issues, charging problems and more.",
+    button: "Explore Services",
     image:
       "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1920&q=90",
   },
   {
     title: "Refrigerator Repair Service",
-    subtitle:
-      "Professional refrigerator repair and maintenance. Keep your fridge cool and running perfectly.",
+    highlight: "Fridge Repair",
+    subtitle: "Keep your refrigerator cool and running perfectly.",
+    description:
+      "Our experienced technicians provide reliable refrigerator repair and maintenance services for all major brands.",
+    button: "Explore Services",
     image:
       "https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?w=1920&q=90",
   },
   {
     title: "Air Conditioner Repair Service",
-    subtitle:
-      "Expert AC installation, servicing and repair. Enjoy a cool and comfortable home with FixMate.",
+    highlight: "AC Repair",
+    subtitle: "Professional AC servicing and repair at your doorstep.",
+    description:
+      "Get expert AC installation, servicing and repair. We help you enjoy a cool and comfortable home.",
+    button: "Explore Services",
     image:
       "https://images.unsplash.com/photo-1758798157512-f0a864c696c9?auto=format&fit=crop&w=1920&q=90",
   },
   {
     title: "Television Repair Service",
-    subtitle:
-      "Reliable LED and Smart TV repair service. We fix display, sound and connectivity problems.",
+    highlight: "TV Repair",
+    subtitle: "Expert solutions for your Smart TV and LED TV.",
+    description:
+      "We repair TV display, sound, motherboard and connectivity issues with professional care.",
+    button: "Explore Services",
     image:
       "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=1920&q=90",
   },
   {
     title: "Washing Machine Repair Service",
-    subtitle:
-      "Get your washing machine working like new with our experienced and trusted technicians.",
+    highlight: "Washing Machine",
+    subtitle: "Get your washing machine working like new.",
+    description:
+      "Reliable washing machine repair for drainage, spinning, water supply and other technical problems.",
+    button: "Explore Services",
     image:
       "https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?w=1920&q=90",
   },
   {
     title: "Laptop Repair Service",
-    subtitle:
-      "Complete laptop repair solutions including hardware, software, display and performance issues.",
+    highlight: "Laptop Repair",
+    subtitle: "Complete laptop troubleshooting and repair.",
+    description:
+      "From hardware problems to software issues, our technicians help restore your laptop's performance.",
+    button: "Explore Services",
     image:
       "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=1920&q=90",
   },
   {
     title: "Microwave Oven Repair Service",
-    subtitle:
-      "Quick and dependable microwave oven repair. We help keep your kitchen appliances running smoothly.",
+    highlight: "Microwave Repair",
+    subtitle: "Quick and dependable kitchen appliance repair.",
+    description:
+      "Get professional microwave oven repair and maintenance to keep your kitchen running smoothly.",
+    button: "Explore Services",
     image:
       "https://images.unsplash.com/photo-1585659722983-3a675dabf23d?w=1920&q=90",
   },
