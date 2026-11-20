@@ -80,15 +80,11 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-stone-200/70 bg-[#faf9f6]/95 backdrop-blur-md">
-      <nav className="mx-auto flex h-[78px] max-w-7xl items-center justify-between px-5 lg:px-8">
+      <nav className="relative mx-auto flex h-[78px] max-w-7xl items-center justify-between px-5 lg:px-8">
 
         {/* Logo */}
-        <Link
-          href="/"
-          className="group flex items-center gap-3"
-        >
+        <Link href="/" className="group flex items-center gap-3">
           <div className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-[#243b53] text-white shadow-md transition-all duration-300 group-hover:bg-[#d28b53]">
-
             <Wrench
               size={22}
               strokeWidth={2.2}
@@ -142,7 +138,6 @@ const Navbar = () => {
 
         {/* Desktop Auth Section */}
         <div className="relative hidden items-center gap-3 md:flex">
-
           {isPending ? (
             <div className="h-10 w-10 animate-pulse rounded-full bg-stone-200" />
           ) : user ? (
@@ -158,6 +153,7 @@ const Navbar = () => {
                   <p className="text-[10px] font-medium text-stone-400">
                     Welcome,
                   </p>
+
                   <p className="max-w-[110px] truncate text-sm font-bold text-[#243b53]">
                     {user.name}
                   </p>
@@ -171,11 +167,9 @@ const Navbar = () => {
                 />
               </button>
 
-              {/* Dropdown */}
+              {/* Desktop Dropdown */}
               {dropdownOpen && (
                 <div className="absolute right-0 top-14 z-50 w-64 overflow-hidden rounded-2xl border border-stone-200 bg-white p-2 shadow-xl">
-
-                  {/* User Info */}
                   <div className="flex items-center gap-3 border-b border-stone-100 px-3 py-3">
                     <UserAvatar size="h-11 w-11" />
 
@@ -194,7 +188,6 @@ const Navbar = () => {
                     </div>
                   </div>
 
-                  {/* Profile */}
                   <Link
                     href="/profile"
                     onClick={() => setDropdownOpen(false)}
@@ -204,7 +197,6 @@ const Navbar = () => {
                     My Profile
                   </Link>
 
-                  {/* Dashboard */}
                   <Link
                     href={dashboardLink}
                     onClick={() => setDropdownOpen(false)}
@@ -217,7 +209,6 @@ const Navbar = () => {
                     Dashboard
                   </Link>
 
-                  {/* Logout */}
                   <button
                     onClick={handleLogout}
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-red-500 transition-colors hover:bg-red-50"
@@ -252,25 +243,110 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setOpen(!open)}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-stone-200 text-[#243b53] transition-all duration-300 hover:border-[#d28b53] hover:bg-[#d28b53]/10 md:hidden"
-          aria-label="Toggle menu"
-        >
-          {open ? <X size={23} /> : <Menu size={23} />}
-        </button>
+        {/* Mobile Auth + Menu Button */}
+        <div className="relative flex items-center gap-1.5 md:hidden">
+
+          {/* Mobile Profile Button */}
+          {!isPending && user && (
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-1.5 rounded-full border border-stone-200 bg-white py-1 pl-1 pr-1.5 shadow-sm transition-all hover:border-[#d28b53]"
+            >
+              <UserAvatar size="h-8 w-8" />
+
+              <div className="max-w-[75px] text-left">
+                <p className="text-[8px] font-medium leading-3 text-stone-400">
+                  Welcome,
+                </p>
+
+                <p className="truncate text-[11px] font-bold leading-4 text-[#243b53]">
+                  {user.name}
+                </p>
+              </div>
+
+              <ChevronDown
+                size={12}
+                className={`text-[#243b53] transition-transform duration-300 ${
+                  dropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+          )}
+
+          {isPending && (
+            <div className="h-8 w-8 animate-pulse rounded-full bg-stone-200" />
+          )}
+
+          {/* Mobile Profile Dropdown */}
+          {dropdownOpen && user && (
+            <div className="absolute right-12 top-12 z-[60] w-60 overflow-hidden rounded-2xl border border-stone-200 bg-white p-2 shadow-xl">
+              <div className="flex items-center gap-3 border-b border-stone-100 px-3 py-3">
+                <UserAvatar size="h-10 w-10" />
+
+                <div className="min-w-0">
+                  <p className="text-[10px] font-medium text-stone-400">
+                    Welcome,
+                  </p>
+
+                  <p className="truncate text-sm font-bold text-[#243b53]">
+                    {user.name}
+                  </p>
+
+                  <p className="truncate text-xs text-stone-400">
+                    {user.email}
+                  </p>
+                </div>
+              </div>
+
+              <Link
+                href="/profile"
+                onClick={() => setDropdownOpen(false)}
+                className="mt-2 flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-[#243b53] hover:bg-[#f4e7db]"
+              >
+                <User size={18} className="text-[#d28b53]" />
+                My Profile
+              </Link>
+
+              <Link
+                href={dashboardLink}
+                onClick={() => setDropdownOpen(false)}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-[#243b53] hover:bg-[#f4e7db]"
+              >
+                <LayoutDashboard
+                  size={18}
+                  className="text-[#d28b53]"
+                />
+                Dashboard
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-red-500 hover:bg-red-50"
+              >
+                <LogOut size={18} />
+                Logout
+              </button>
+            </div>
+          )}
+
+          {/* Hamburger */}
+          <button
+            onClick={() => setOpen(!open)}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-stone-200 text-[#243b53] transition-all duration-300 hover:border-[#d28b53] hover:bg-[#d28b53]/10"
+            aria-label="Toggle menu"
+          >
+            {open ? <X size={21} /> : <Menu size={21} />}
+          </button>
+        </div>
       </nav>
 
-      {/* Mobile Navigation */}
+      {/* Mobile Navigation - Only Navigation Links */}
       <div
         className={`overflow-hidden border-t border-stone-200/70 bg-[#faf9f6] transition-all duration-300 md:hidden ${
-          open ? "max-h-[650px] opacity-100" : "max-h-0 opacity-0"
+          open ? "max-h-[300px] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <div className="space-y-2 px-5 py-5">
-
-          {/* Mobile Links */}
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
 
@@ -290,86 +366,27 @@ const Navbar = () => {
             );
           })}
 
-          {/* Mobile Auth */}
-          <div className="border-t border-stone-200 pt-4">
+          {/* Sign In / Get Started - Only When Logged Out */}
+          {!isPending && !user && (
+            <div className="grid grid-cols-2 gap-3 border-t border-stone-200 pt-4">
+              <Link
+                href="/sign-in"
+                onClick={() => setOpen(false)}
+                className="rounded-xl border border-[#243b53] py-3 text-center text-sm font-bold text-[#243b53] transition-all duration-300 hover:bg-[#243b53] hover:text-white"
+              >
+                Sign In
+              </Link>
 
-            {isPending ? (
-              <div className="h-12 animate-pulse rounded-xl bg-stone-200" />
-            ) : user ? (
-              <div className="space-y-2">
-
-                {/* User Info */}
-                <div className="flex items-center gap-3 rounded-xl bg-white p-3">
-                  <UserAvatar size="h-12 w-12" />
-
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-medium text-stone-400">
-                      Welcome,
-                    </p>
-
-                    <p className="truncate text-sm font-bold text-[#243b53]">
-                      {user.name}
-                    </p>
-
-                    <p className="truncate text-xs text-stone-400">
-                      {user.email}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Profile */}
-                <Link
-                  href="/profile"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#243b53] hover:bg-stone-100"
-                >
-                  <User size={18} className="text-[#d28b53]" />
-                  My Profile
-                </Link>
-
-                {/* Dashboard */}
-                <Link
-                  href={dashboardLink}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#243b53] hover:bg-stone-100"
-                >
-                  <LayoutDashboard
-                    size={18}
-                    className="text-[#d28b53]"
-                  />
-                  Dashboard
-                </Link>
-
-                {/* Logout */}
-                <button
-                  onClick={handleLogout}
-                  className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-red-500 transition-colors hover:bg-red-50"
-                >
-                  <LogOut size={18} />
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <Link
-                  href="/sign-in"
-                  onClick={() => setOpen(false)}
-                  className="rounded-xl border border-[#243b53] py-3 text-center text-sm font-bold text-[#243b53] transition-all duration-300 hover:bg-[#243b53] hover:text-white"
-                >
-                  Sign In
-                </Link>
-
-                <Link
-                  href="/sign-up"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-[#243b53] py-3 text-sm font-bold text-white transition-all duration-300 hover:bg-[#d28b53]"
-                >
-                  Get Started
-                  <ArrowUpRight size={16} />
-                </Link>
-              </div>
-            )}
-          </div>
+              <Link
+                href="/sign-up"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center gap-2 rounded-xl bg-[#243b53] py-3 text-sm font-bold text-white transition-all duration-300 hover:bg-[#d28b53]"
+              >
+                Get Started
+                <ArrowUpRight size={16} />
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </header>
