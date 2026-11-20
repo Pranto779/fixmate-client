@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 
 import {
@@ -22,6 +21,7 @@ import { authClient, useSession } from "@/lib/auth-client";
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const pathname = usePathname();
   const router = useRouter();
@@ -59,18 +59,18 @@ const Navbar = () => {
     }
   };
 
-  // User Avatar
+  // User Avatar - Session Image
   const UserAvatar = ({ size = "h-10 w-10" }: { size?: string }) => (
     <div
       className={`${size} relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#e9d8c5] bg-[#243b53] text-sm font-bold uppercase text-white`}
     >
-      {user?.image ? (
-        <Image
+      {user?.image && !imageError ? (
+        <img
           src={user.image}
           alt={user.name || "User"}
-          fill
-          sizes="40px"
-          className="object-cover"
+          className="absolute inset-0 h-full w-full rounded-full object-cover"
+          referrerPolicy="no-referrer"
+          onError={() => setImageError(true)}
         />
       ) : (
         user?.name?.charAt(0) || "U"
@@ -340,7 +340,7 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile Navigation - Only Navigation Links */}
+      {/* Mobile Navigation */}
       <div
         className={`overflow-hidden border-t border-stone-200/70 bg-[#faf9f6] transition-all duration-300 md:hidden ${
           open ? "max-h-[300px] opacity-100" : "max-h-0 opacity-0"
