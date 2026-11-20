@@ -49,7 +49,7 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await authClient.signOut();
-      toast.success('Sign Out successfully')
+      toast.success("Sign Out successfully");
 
       setDropdownOpen(false);
       setOpen(false);
@@ -61,26 +61,45 @@ const Navbar = () => {
     }
   };
 
-  // User Avatar - Session Image
+  // Role Badge Colors
+  const roleStyles: Record<string, string> = {
+    admin: "bg-purple-100 text-purple-700 border-purple-200",
+    technician: "bg-blue-100 text-blue-700 border-blue-200",
+    customer: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  };
+
+  // User Avatar - Session Image + Role
   const UserAvatar = ({ size = "h-10 w-10" }: { size?: string }) => {
-    const image = session?.user?.image;
-    const firstLetter = session?.user?.name?.charAt(0) || "U";
+    const image = user?.image;
+    const firstLetter = user?.name?.charAt(0) || "U";
+    const role = user?.role || "customer";
 
     return (
-      <div
-        className={`${size} relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#e9d8c5] bg-[#243b53] text-sm font-bold uppercase text-white`}
-      >
-        {image && !imageError ? (
-          <img
-            src={image}
-            alt={session?.user?.name || "User"}
-            className="absolute inset-0 h-full w-full rounded-full object-cover"
-            referrerPolicy="no-referrer"
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          firstLetter
-        )}
+      <div className="relative flex shrink-0 flex-col items-center">
+        <div
+          className={`${size} relative flex items-center justify-center overflow-hidden rounded-full border-2 border-[#e9d8c5] bg-[#243b53] text-sm font-bold uppercase text-white`}
+        >
+          {image && !imageError ? (
+            <img
+              src={image}
+              alt={user?.name || "User"}
+              className="absolute inset-0 h-full w-full rounded-full object-cover"
+              referrerPolicy="no-referrer"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            firstLetter
+          )}
+        </div>
+
+        {/* Small Role Badge Below Avatar */}
+        <span
+          className={`absolute -bottom-[9px] left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full border px-1.5 py-[2px] text-[8px] font-bold capitalize shadow-sm ${
+            roleStyles[role] || roleStyles.customer
+          }`}
+        >
+          {role}
+        </span>
       </div>
     );
   };
