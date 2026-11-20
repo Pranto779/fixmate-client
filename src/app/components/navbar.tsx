@@ -2,47 +2,104 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+
 import {
   Wrench,
   Cog,
   Menu,
   X,
   ArrowUpRight,
+  User,
+  LayoutDashboard,
+  LogOut,
+  ChevronDown,
 } from "lucide-react";
+
+import { authClient, useSession } from "@/lib/auth-client";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const { data: session, isPending } = useSession();
+  const user = session?.user;
+
+  // Role Based Dashboard
+  const dashboardLink =
+    user?.role === "admin"
+      ? "/dashboard/admin"
+      : user?.role === "technician"
+        ? "/dashboard/technician"
+        : "/dashboard/customer";
+
+  // Navigation Links
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Services", href: "/services" },
     { name: "How It Works", href: "/how-It-work" },
   ];
 
+  // Logout Function
+  const handleLogout = async () => {
+    try {
+      await authClient.signOut();
+
+      setDropdownOpen(false);
+      setOpen(false);
+
+      router.push("/sign-in");
+      router.refresh();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
+  // User Avatar
+  const UserAvatar = ({ size = "h-10 w-10" }: { size?: string }) => (
+    <div
+      className={`${size} relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#e9d8c5] bg-[#243b53] text-sm font-bold uppercase text-white`}
+    >
+      {user?.image ? (
+        <Image
+          src={user.image}
+          alt={user.name || "User"}
+          fill
+          sizes="40px"
+          className="object-cover"
+        />
+      ) : (
+        user?.name?.charAt(0) || "U"
+      )}
+    </div>
+  );
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-stone-200/70 bg-[#faf9f6]/95 backdrop-blur-md">
       <nav className="mx-auto flex h-[78px] max-w-7xl items-center justify-between px-5 lg:px-8">
 
         {/* Logo */}
-        <Link href="/" className="group flex items-center gap-3">
+        <Link
+          href="/"
+          className="group flex items-center gap-3"
+        >
           <div className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-[#243b53] text-white shadow-md transition-all duration-300 group-hover:bg-[#d28b53]">
 
-            {/* Wrench Icon */}
             <Wrench
               size={22}
               strokeWidth={2.2}
               className="absolute transition-all duration-300 group-hover:rotate-[-45deg] group-hover:scale-0 group-hover:opacity-0"
             />
 
-            {/* Rotating Gear Icon */}
             <Cog
               size={25}
               strokeWidth={2.2}
               className="absolute scale-0 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100 group-hover:animate-spin"
             />
-
           </div>
 
           <div>
@@ -83,25 +140,116 @@ const Navbar = () => {
           })}
         </div>
 
-        {/* Desktop Buttons */}
-        <div className="hidden items-center gap-3 md:flex">
-          <Link
-            href="/sign-in"
-            className="rounded-xl px-5 py-2.5 text-sm font-bold text-[#243b53] transition-all duration-300 hover:bg-stone-100"
-          >
-            Sign In
-          </Link>
+        {/* Desktop Auth Section */}
+        <div className="relative hidden items-center gap-3 md:flex">
 
-          <Link
-            href="/sign-up"
-            className="group flex items-center gap-2 rounded-xl bg-[#243b53] px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#d28b53]"
-          >
-            Get Started
-            <ArrowUpRight
-              size={17}
-              className="transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1"
-            />
-          </Link>
+          {isPending ? (
+            <div className="h-10 w-10 animate-pulse rounded-full bg-stone-200" />
+          ) : user ? (
+            <>
+              {/* Avatar Button */}
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-3 rounded-full border border-stone-200 bg-white py-1.5 pl-1.5 pr-3 shadow-sm transition-all hover:border-[#d28b53]"
+              >
+                <UserAvatar />
+
+                <div className="text-left">
+                  <p className="text-[10px] font-medium text-stone-400">
+                    Welcome,
+                  </p>
+                  <p className="max-w-[110px] truncate text-sm font-bold text-[#243b53]">
+                    {user.name}
+                  </p>
+                </div>
+
+                <ChevronDown
+                  size={16}
+                  className={`text-[#243b53] transition-transform duration-300 ${
+                    dropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Dropdown */}
+              {dropdownOpen && (
+                <div className="absolute right-0 top-14 z-50 w-64 overflow-hidden rounded-2xl border border-stone-200 bg-white p-2 shadow-xl">
+
+                  {/* User Info */}
+                  <div className="flex items-center gap-3 border-b border-stone-100 px-3 py-3">
+                    <UserAvatar size="h-11 w-11" />
+
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-medium text-stone-400">
+                        Welcome,
+                      </p>
+
+                      <p className="truncate text-sm font-bold text-[#243b53]">
+                        {user.name}
+                      </p>
+
+                      <p className="truncate text-xs text-stone-400">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Profile */}
+                  <Link
+                    href="/profile"
+                    onClick={() => setDropdownOpen(false)}
+                    className="mt-2 flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-[#243b53] transition-colors hover:bg-[#f4e7db]"
+                  >
+                    <User size={18} className="text-[#d28b53]" />
+                    My Profile
+                  </Link>
+
+                  {/* Dashboard */}
+                  <Link
+                    href={dashboardLink}
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-[#243b53] transition-colors hover:bg-[#f4e7db]"
+                  >
+                    <LayoutDashboard
+                      size={18}
+                      className="text-[#d28b53]"
+                    />
+                    Dashboard
+                  </Link>
+
+                  {/* Logout */}
+                  <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-red-500 transition-colors hover:bg-red-50"
+                  >
+                    <LogOut size={18} />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <Link
+                href="/sign-in"
+                className="rounded-xl px-5 py-2.5 text-sm font-bold text-[#243b53] transition-all duration-300 hover:bg-stone-100"
+              >
+                Sign In
+              </Link>
+
+              <Link
+                href="/sign-up"
+                className="group flex items-center gap-2 rounded-xl bg-[#243b53] px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#d28b53]"
+              >
+                Get Started
+
+                <ArrowUpRight
+                  size={17}
+                  className="transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1"
+                />
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -117,12 +265,12 @@ const Navbar = () => {
       {/* Mobile Navigation */}
       <div
         className={`overflow-hidden border-t border-stone-200/70 bg-[#faf9f6] transition-all duration-300 md:hidden ${
-          open
-            ? "max-h-[450px] opacity-100"
-            : "max-h-0 opacity-0"
+          open ? "max-h-[650px] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <div className="space-y-2 px-5 py-5">
+
+          {/* Mobile Links */}
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
 
@@ -142,23 +290,85 @@ const Navbar = () => {
             );
           })}
 
-          <div className="grid grid-cols-2 gap-3 pt-3">
-            <Link
-              href="/sign-in"
-              onClick={() => setOpen(false)}
-              className="rounded-xl border border-[#243b53] py-3 text-center text-sm font-bold text-[#243b53] transition-all duration-300 hover:bg-[#243b53] hover:text-white"
-            >
-              Sign In
-            </Link>
+          {/* Mobile Auth */}
+          <div className="border-t border-stone-200 pt-4">
 
-            <Link
-              href="/sign-up"
-              onClick={() => setOpen(false)}
-              className="flex items-center justify-center gap-2 rounded-xl bg-[#243b53] py-3 text-sm font-bold text-white transition-all duration-300 hover:bg-[#d28b53]"
-            >
-              Get Started
-              <ArrowUpRight size={16} />
-            </Link>
+            {isPending ? (
+              <div className="h-12 animate-pulse rounded-xl bg-stone-200" />
+            ) : user ? (
+              <div className="space-y-2">
+
+                {/* User Info */}
+                <div className="flex items-center gap-3 rounded-xl bg-white p-3">
+                  <UserAvatar size="h-12 w-12" />
+
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-medium text-stone-400">
+                      Welcome,
+                    </p>
+
+                    <p className="truncate text-sm font-bold text-[#243b53]">
+                      {user.name}
+                    </p>
+
+                    <p className="truncate text-xs text-stone-400">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Profile */}
+                <Link
+                  href="/profile"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#243b53] hover:bg-stone-100"
+                >
+                  <User size={18} className="text-[#d28b53]" />
+                  My Profile
+                </Link>
+
+                {/* Dashboard */}
+                <Link
+                  href={dashboardLink}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#243b53] hover:bg-stone-100"
+                >
+                  <LayoutDashboard
+                    size={18}
+                    className="text-[#d28b53]"
+                  />
+                  Dashboard
+                </Link>
+
+                {/* Logout */}
+                <button
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-red-500 transition-colors hover:bg-red-50"
+                >
+                  <LogOut size={18} />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href="/sign-in"
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl border border-[#243b53] py-3 text-center text-sm font-bold text-[#243b53] transition-all duration-300 hover:bg-[#243b53] hover:text-white"
+                >
+                  Sign In
+                </Link>
+
+                <Link
+                  href="/sign-up"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-[#243b53] py-3 text-sm font-bold text-white transition-all duration-300 hover:bg-[#d28b53]"
+                >
+                  Get Started
+                  <ArrowUpRight size={16} />
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
