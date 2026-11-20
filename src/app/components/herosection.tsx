@@ -14,18 +14,38 @@ import {
 import Image from "next/image";
 
 const Hero = () => {
+  const heroImage =
+    "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1000&q=85";
+
   return (
     <section className="relative overflow-hidden bg-[#faf9f6]">
-      {/* Background Decoration */}
-      <div className="pointer-events-none absolute -right-32 -top-32 h-[450px] w-[450px] rounded-full bg-[#e9d8c5]/30 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 -left-32 h-[400px] w-[400px] rounded-full bg-blue-100/40 blur-3xl" />
 
-      <div className="relative mx-auto grid min-h-[620px] max-w-7xl items-center gap-12 px-5 py-16 md:grid-cols-2 lg:px-8 lg:py-20">
+      {/* Mobile Background Image Layer */}
+      <div className="absolute inset-0 z-0 md:hidden">
+        <Image
+          src={heroImage}
+          alt="Professional repair technician"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+
+        {/* Image Overlay */}
+        <div className="absolute inset-0 bg-[#faf9f6]/65" />
+      </div>
+
+      {/* Background Decoration */}
+      <div className="pointer-events-none absolute -right-32 -top-32 z-[1] h-[450px] w-[450px] rounded-full bg-[#e9d8c5]/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 -left-32 z-[1] h-[400px] w-[400px] rounded-full bg-blue-100/40 blur-3xl" />
+
+      <div className="relative z-10 mx-auto grid min-h-0 max-w-7xl items-center gap-10 px-5 py-12 md:min-h-[620px] md:grid-cols-2 md:gap-12 md:py-16 lg:px-8 lg:py-20">
 
         {/* Left Content */}
         <div className="z-10">
+
           {/* Badge */}
-          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-[#e8d7c5] bg-white px-4 py-2 shadow-sm">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#e8d7c5] bg-white/90 px-4 py-2 shadow-sm">
             <span className="h-2 w-2 rounded-full bg-[#d28b53]" />
             <span className="text-xs font-bold tracking-wide text-[#8c6548]">
               YOUR TRUSTED REPAIR PARTNER
@@ -33,24 +53,24 @@ const Hero = () => {
           </div>
 
           {/* Heading */}
-          <h1 className="max-w-xl text-5xl font-extrabold leading-[1.13] tracking-tight text-[#243b53] sm:text-6xl lg:text-[68px]">
+          <h1 className="max-w-xl text-4xl font-extrabold leading-[1.13] tracking-tight text-[#243b53] sm:text-5xl md:text-6xl lg:text-[68px]">
             Repair Smarter.
             <br />
             Live <span className="text-[#d28b53]">Better.</span>
           </h1>
 
           {/* Description */}
-          <p className="mt-7 max-w-lg text-base leading-8 text-[#718096] sm:text-lg">
+          <p className="mt-5 max-w-lg text-sm leading-7 text-[#718096] sm:text-base sm:leading-8 md:mt-7 md:text-lg">
             From broken appliances to everyday home fixes, connect with
             trusted professionals and get your problems solved without
             the hassle.
           </p>
 
           {/* Buttons */}
-          <div className="mt-9 flex flex-wrap items-center gap-4">
+          <div className="mt-7 flex flex-wrap items-center gap-3 md:mt-9 md:gap-4">
             <Link
               href="/services"
-              className="group flex items-center gap-3 rounded-xl bg-[#243b53] px-7 py-4 text-sm font-bold text-white shadow-xl shadow-slate-900/10 transition duration-300 hover:-translate-y-1 hover:bg-[#d28b53]"
+              className="group flex items-center gap-3 rounded-xl bg-[#243b53] px-5 py-3.5 text-sm font-bold text-white shadow-xl shadow-slate-900/10 transition duration-300 hover:-translate-y-1 hover:bg-[#d28b53] md:px-7 md:py-4"
             >
               Explore Services
               <ArrowUpRight
@@ -61,7 +81,7 @@ const Hero = () => {
 
             <Link
               href="/about"
-              className="flex items-center gap-2 rounded-xl border border-stone-300 bg-white px-7 py-4 text-sm font-bold text-[#243b53] transition hover:border-[#d28b53] hover:text-[#d28b53]"
+              className="flex items-center gap-2 rounded-xl border border-stone-300 bg-white/90 px-5 py-3.5 text-sm font-bold text-[#243b53] transition hover:border-[#d28b53] hover:text-[#d28b53] md:px-7 md:py-4"
             >
               How It Works
               <ArrowRight size={17} />
@@ -69,7 +89,7 @@ const Hero = () => {
           </div>
 
           {/* Trust Info */}
-          <div className="mt-12 flex flex-wrap items-center gap-7 border-t border-stone-200 pt-7">
+          <div className="mt-8 flex flex-wrap items-center gap-6 border-t border-stone-200/80 pt-6 md:mt-12 md:gap-7 md:pt-7">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e9e3d9] text-[#243b53]">
                 <ShieldCheck size={21} />
@@ -92,16 +112,16 @@ const Hero = () => {
           </div>
         </div>
 
-        {/* Right Visual */}
-        <div className="relative mx-auto w-full max-w-[510px]">
+        {/* Right Visual - Desktop Only */}
+        <div className="relative mx-auto hidden w-full max-w-[510px] md:block">
 
           {/* Main Image Card */}
           <div className="relative overflow-hidden rounded-[32px] border-[10px] border-white bg-[#e9e3d9] shadow-2xl shadow-slate-900/10">
             <div className="relative h-[400px] overflow-hidden sm:h-[470px]">
               <Image
-              height={1000}
-              width={1000}
-                src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1000&q=85"
+                height={1000}
+                width={1000}
+                src={heroImage}
                 alt="Professional home appliance repair technician"
                 className="h-full w-full object-cover"
               />
