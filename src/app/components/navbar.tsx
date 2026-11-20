@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { authClient, useSession } from "@/lib/auth-client";
+import { toast } from "sonner";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
@@ -41,13 +42,14 @@ const Navbar = () => {
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Services", href: "/services" },
-    { name: "How It Works", href: "/how-It-work" },
+    { name: "How It Works", href: "/How-It-work" },
   ];
 
   // Logout Function
   const handleLogout = async () => {
     try {
       await authClient.signOut();
+      toast.success('Sign Out successfully')
 
       setDropdownOpen(false);
       setOpen(false);
@@ -60,23 +62,28 @@ const Navbar = () => {
   };
 
   // User Avatar - Session Image
-  const UserAvatar = ({ size = "h-10 w-10" }: { size?: string }) => (
-    <div
-      className={`${size} relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#e9d8c5] bg-[#243b53] text-sm font-bold uppercase text-white`}
-    >
-      {user?.image && !imageError ? (
-        <img
-          src={user.image}
-          alt={user.name || "User"}
-          className="absolute inset-0 h-full w-full rounded-full object-cover"
-          referrerPolicy="no-referrer"
-          onError={() => setImageError(true)}
-        />
-      ) : (
-        user?.name?.charAt(0) || "U"
-      )}
-    </div>
-  );
+  const UserAvatar = ({ size = "h-10 w-10" }: { size?: string }) => {
+    const image = session?.user?.image;
+    const firstLetter = session?.user?.name?.charAt(0) || "U";
+
+    return (
+      <div
+        className={`${size} relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#e9d8c5] bg-[#243b53] text-sm font-bold uppercase text-white`}
+      >
+        {image && !imageError ? (
+          <img
+            src={image}
+            alt={session?.user?.name || "User"}
+            className="absolute inset-0 h-full w-full rounded-full object-cover"
+            referrerPolicy="no-referrer"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          firstLetter
+        )}
+      </div>
+    );
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-stone-200/70 bg-[#faf9f6]/95 backdrop-blur-md">

@@ -94,7 +94,7 @@ const slides = [
       "https://images.unsplash.com/photo-1585659722983-3a675dabf23d?w=1920&q=90",
   },
 ];
-export default function HowItWorksBanner() {
+export default function HowitWorksBanner() {
   const plugin = React.useRef(
     Autoplay({
       delay: 7000,
@@ -156,8 +156,19 @@ export default function HowItWorksBanner() {
 
   return (
     <main className="min-h-screen bg-[#faf9f6]">
+<div className=" text-center">
+  <span className="mb-2 mt-2 inline-flex items-center gap-2 rounded-full bg-[#e9d8c5]/50 px-4 py-2 text-xs font-bold uppercase tracking-[2px] text-[#8c6548]">
+    <Wrench size={14} />
+    Simple Process
+  </span>
 
-      {/* HERO CAROUSEL */}
+  <h2 className="text-3xl mb-2 font-extrabold tracking-tight text-[#243b53] sm:text-4xl lg:text-5xl">
+    How It <span className="relative text-[#d28b53]">
+      Works
+      <span className="absolute -bottom-2 left-0 h-1 w-full rounded-full bg-[#d28b53]/30" />
+    </span>
+  </h2>
+</div>
       <section className="bg-[#30251e]">
         <Carousel
           plugins={[plugin.current]}
@@ -281,55 +292,6 @@ export default function HowItWorksBanner() {
           </div>
         </div>
       </section>
-
-      {/* WHY CHOOSE FIXMATE */}
-      <section className="bg-[#f1ece6] px-5 py-20 md:py-24">
-        <div className="mx-auto max-w-7xl">
-
-          <div className="mb-14 text-center">
-            <span className="text-sm font-bold uppercase tracking-[3px] text-[#ad8059]">
-              Why Choose Us
-            </span>
-
-            <h2 className="mt-4 text-3xl font-bold text-[#30251e] md:text-5xl">
-              Why People Choose FixMate
-            </h2>
-
-            <p className="mx-auto mt-5 max-w-xl leading-7 text-gray-500">
-              We make repairing your home appliances easier,
-              faster and more reliable.
-            </p>
-          </div>
-
-          <div className="grid gap-7 md:grid-cols-3">
-
-            {benefits.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <div
-                  key={item.title}
-                  className="rounded-2xl border border-[#e6ddd4] bg-white p-9 text-center transition duration-300 hover:-translate-y-2 hover:shadow-xl"
-                >
-                  <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#f5eee7] text-[#a87950]">
-                    <Icon size={30} />
-                  </div>
-
-                  <h3 className="text-xl font-bold text-[#30251e]">
-                    {item.title}
-                  </h3>
-
-                  <p className="mt-4 text-sm leading-7 text-gray-500">
-                    {item.description}
-                  </p>
-                </div>
-              );
-            })}
-
-          </div>
-        </div>
-      </section>
-
       {/* CTA SECTION */}
       <section className="bg-[#faf9f6] px-5 py-20">
         <div className="mx-auto max-w-6xl rounded-3xl bg-[#30251e] px-6 py-16 text-center text-white md:px-16">

@@ -18,7 +18,6 @@ import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-
 const SignupPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
@@ -31,6 +30,33 @@ const SignupPage = () => {
     role: "customer",
   });
 
+  const [errors, setErrors] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Password Validation
+  const validatePassword = (password: string) => {
+    const passwordErrors: string[] = [];
+
+    if (password.length < 6) {
+      passwordErrors.push("At least 6 characters required.");
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      passwordErrors.push("At least one uppercase letter required.");
+    }
+
+    if (!/[a-z]/.test(password)) {
+      passwordErrors.push("At least one lowercase letter required.");
+    }
+
+    return passwordErrors;
+  };
+
   // Handle Input Change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -39,44 +65,114 @@ const SignupPage = () => {
       ...prev,
       [name]: value,
     }));
+
+    if (name === "name") {
+      setErrors((prev) => ({
+        ...prev,
+        name: value.trim() ? "" : prev.name,
+      }));
+    }
+
+    if (name === "email") {
+      setErrors((prev) => ({
+        ...prev,
+        email: value.trim()
+          ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+            ? ""
+            : "Please enter a valid email address."
+          : "",
+      }));
+    }
+
+    if (name === "password") {
+      setErrors((prev) => ({
+        ...prev,
+        password: validatePassword(value).join(" "),
+      }));
+    }
   };
 
   // Handle Form Submit
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const userdata = {
-    name: formData.name,
-    email: formData.email,
-    password: formData.password,
-    image: formData.image,
-    signupRole: formData.role as "customer" | "technician",
+    const newErrors = {
+      name: "",
+      email: "",
+      password: "",
+    };
+
+    // Required Field Validation
+    if (!formData.name.trim()) {
+      newErrors.name = "Full name is required.";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email address is required.";
+    } else if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())
+    ) {
+      newErrors.email = "Please enter a valid email address.";
+    }
+
+    // Password Validation
+    newErrors.password = validatePassword(formData.password).join(" ");
+
+    setErrors(newErrors);
+
+    if (
+      newErrors.name ||
+      newErrors.email ||
+      newErrors.password
+    ) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const userdata = {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+        image: formData.image,
+        signupRole: formData.role as "customer" | "technician",
+      };
+
+      const result = await authClient.signUp.email({
+        name: userdata.name,
+        email: userdata.email,
+        password: userdata.password,
+        image: userdata.image || undefined,
+        signupRole: userdata.signupRole,
+        callbackURL: "/",
+      });
+
+      if (result.error) {
+        if (result.error.code === "USER_ALREADY_EXISTS") {
+          toast.info("This email is already registered.");
+        } else {
+          toast.error(
+            result.error.message || "Failed to create account."
+          );
+        }
+      } else {
+        toast.success("Account created successfully!");
+
+        await authClient.signOut();
+        router.push("/sign-in");
+      }
+
+      console.log("Selected Role:", userdata.signupRole);
+      console.log("Signup Result:", result);
+    } catch (error) {
+      console.error("Signup Error:", error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const result = await authClient.signUp.email({
-    name: userdata.name,
-    email: userdata.email,
-    password: userdata.password,
-    image: userdata.image || undefined,
-    signupRole: userdata.signupRole,
-    callbackURL: "/",
-  });
-
-  if (result.error) {
-    if (result.error.code === "USER_ALREADY_EXISTS") {
-      toast.info("This email is already registered.");
-    } else {
-      toast.error(result.error.message || "Failed to create account.");
-    }
-  } else {
-    toast.success("Account created successfully!");
-    await authClient.signOut();
-    router.push("/sign-in");
-  }
-
-  console.log("Selected Role:", userdata.signupRole);
-  console.log("Signup Result:", result);
-};
   return (
     <div className="flex min-h-[80vh] items-center justify-center bg-[#faf9f6] px-4 py-8 sm:px-6">
       <div className="mx-auto grid min-h-[80vh] w-full max-w-6xl overflow-hidden rounded-[30px] bg-white shadow-2xl shadow-slate-900/10 lg:grid-cols-2">
@@ -224,7 +320,7 @@ const SignupPage = () => {
             </div>
 
             {/* FORM */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
 
               {/* Name */}
               <div>
@@ -244,10 +340,15 @@ const SignupPage = () => {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="Enter your full name"
-                    required
                     className="w-full rounded-xl border border-stone-200 bg-[#faf9f6] py-3.5 pl-11 pr-4 text-sm text-[#243b53] outline-none transition placeholder:text-stone-400 focus:border-[#d28b53] focus:ring-2 focus:ring-[#d28b53]/10"
                   />
                 </div>
+
+                {errors.name && (
+                  <p className="mt-1.5 text-xs font-medium text-red-500">
+                    {errors.name}
+                  </p>
+                )}
               </div>
 
               {/* Email */}
@@ -268,10 +369,15 @@ const SignupPage = () => {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="you@example.com"
-                    required
                     className="w-full rounded-xl border border-stone-200 bg-[#faf9f6] py-3.5 pl-11 pr-4 text-sm text-[#243b53] outline-none transition placeholder:text-stone-400 focus:border-[#d28b53] focus:ring-2 focus:ring-[#d28b53]/10"
                   />
                 </div>
+
+                {errors.email && (
+                  <p className="mt-1.5 text-xs font-medium text-red-500">
+                    {errors.email}
+                  </p>
+                )}
               </div>
 
               {/* Password */}
@@ -292,8 +398,6 @@ const SignupPage = () => {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Create a strong password"
-                    required
-                    minLength={6}
                     className="w-full rounded-xl border border-stone-200 bg-[#faf9f6] py-3.5 pl-11 pr-12 text-sm text-[#243b53] outline-none transition placeholder:text-stone-400 focus:border-[#d28b53] focus:ring-2 focus:ring-[#d28b53]/10"
                   />
 
@@ -312,6 +416,29 @@ const SignupPage = () => {
                     )}
                   </button>
                 </div>
+
+                {/* Password Validation Messages */}
+                {formData.password && (
+                  <div className="mt-2 space-y-1">
+                    {validatePassword(formData.password).length > 0 ? (
+                      validatePassword(formData.password).map(
+                        (error, index) => (
+                          <p
+                            key={index}
+                            className="text-xs font-medium text-red-500"
+                          >
+                            • {error}
+                          </p>
+                        )
+                      )
+                    ) : (
+                      <p className="flex items-center gap-1.5 text-xs font-semibold text-green-600">
+                        <CheckCircle2 size={14} />
+                        Nice! Your password is strong.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Image URL */}
@@ -394,14 +521,17 @@ const SignupPage = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="group mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#243b53] py-4 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition duration-300 hover:bg-[#d28b53]"
+                disabled={isSubmitting}
+                className="group mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#243b53] py-4 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition duration-300 hover:bg-[#d28b53] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Create Account
+                {isSubmitting ? "Creating Account..." : "Create Account"}
 
-                <ArrowRight
-                  size={18}
-                  className="transition-transform group-hover:translate-x-1"
-                />
+                {!isSubmitting && (
+                  <ArrowRight
+                    size={18}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                )}
               </button>
             </form>
 
@@ -421,7 +551,6 @@ const SignupPage = () => {
               By creating an account, you agree to our Terms of Service
               and Privacy Policy.
             </p>
-
           </div>
         </div>
       </div>

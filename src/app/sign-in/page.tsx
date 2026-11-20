@@ -49,7 +49,7 @@ password: userdata.password,
 
     if (data) {
       toast.success("Sign In Successful!");
-      router.push("/"); // /dashboard redirects to the role-based dashboard
+      router.push("/dashboard"); // /dashboard redirects to the role-based dashboard
     }else {
       toast.error("Sign In Failed. Please check your credentials.");
     }

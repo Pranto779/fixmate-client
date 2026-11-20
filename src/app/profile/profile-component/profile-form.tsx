@@ -7,14 +7,15 @@ import { toast } from "sonner";
 import { authClient, useSession } from "@/lib/auth-client";
 
 // ================= PROFILE FORM =================
-// Edits name + avatar URL via better-auth updateUser().
-// Email is read-only (better-auth handles email change separately).
 
 type ProfileFormProps = {
   user: {
     name: string;
     email: string;
     image?: string | null;
+    phone?: string | null;
+    area?: string | null;
+    bio?: string | null;
   };
 };
 
@@ -29,14 +30,25 @@ const ProfileForm = ({ user }: ProfileFormProps) => {
 
   const [name, setName] = useState(user.name);
   const [image, setImage] = useState(user.image ?? "");
+  const [phone, setPhone] = useState(user.phone ?? "");
+  const [area, setArea] = useState(user.area ?? "");
+  const [bio, setBio] = useState(user.bio ?? "");
+
   const [isSaving, setIsSaving] = useState(false);
 
   const isDirty =
-    name !== user.name || image !== (user.image ?? "");
+    name !== user.name ||
+    image !== (user.image ?? "") ||
+    phone !== (user.phone ?? "") ||
+    area !== (user.area ?? "") ||
+    bio !== (user.bio ?? "");
 
   const handleReset = () => {
     setName(user.name);
     setImage(user.image ?? "");
+    setPhone(user.phone ?? "");
+    setArea(user.area ?? "");
+    setBio(user.bio ?? "");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,19 +61,26 @@ const ProfileForm = ({ user }: ProfileFormProps) => {
 
     setIsSaving(true);
 
-    const { error } = await authClient.updateUser({
-      name: name.trim(),
-      image: image.trim() || null,
-    });
+    try {
+      const { error } = await authClient.updateUser({
+        name: name.trim(),
+        image: image.trim() || null,
+        phone: phone.trim(),
+        area: area.trim(),
+        bio: bio.trim(),
+      });
 
-    if (error) {
-      toast.error(error.message || "Failed to update profile.");
-    } else {
-      toast.success("Profile updated successfully!");
-      await refetch(); // refreshes navbar + summary card too
+      if (error) {
+        toast.error(error.message || "Failed to update profile.");
+      } else {
+        toast.success("Profile updated successfully!");
+        await refetch();
+      }
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
-
-    setIsSaving(false);
   };
 
   return (
@@ -72,8 +91,7 @@ const ProfileForm = ({ user }: ProfileFormProps) => {
       </h2>
 
       <p className="mt-1 text-sm text-stone-500">
-        Update your name and avatar. Changes are saved to your
-        account.
+        Update your personal information and profile details.
       </p>
 
       {/* ============ FORM ============ */}
@@ -111,9 +129,56 @@ const ProfileForm = ({ user }: ProfileFormProps) => {
           />
 
           <p className="mt-1.5 text-xs text-stone-400">
-            Paste a direct image link. Leave empty to use your
-            initials.
+            Paste a direct image link. Leave empty to use your initials.
           </p>
+        </div>
+
+        {/* Phone */}
+        <div>
+          <label htmlFor="profile-phone" className={LABEL_CLASSES}>
+            Phone Number
+          </label>
+
+          <input
+            id="profile-phone"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Enter your phone number"
+            className={INPUT_CLASSES}
+          />
+        </div>
+
+        {/* Area */}
+        <div>
+          <label htmlFor="profile-area" className={LABEL_CLASSES}>
+            Area / Location
+          </label>
+
+          <input
+            id="profile-area"
+            type="text"
+            value={area}
+            onChange={(e) => setArea(e.target.value)}
+            placeholder="e.g. Tongi, Gazipur"
+            className={INPUT_CLASSES}
+          />
+        </div>
+
+        {/* Bio */}
+        <div>
+          <label htmlFor="profile-bio" className={LABEL_CLASSES}>
+            Bio
+          </label>
+
+          <textarea
+            id="profile-bio"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            placeholder="Write something about yourself..."
+            rows={4}
+            className={`${INPUT_CLASSES} resize-none`}
+          />
         </div>
 
         {/* Email (read-only) */}
@@ -147,6 +212,7 @@ const ProfileForm = ({ user }: ProfileFormProps) => {
             ) : (
               <Save size={16} />
             )}
+
             {isSaving ? "Saving..." : "Save Changes"}
           </button>
 
