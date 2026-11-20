@@ -7,6 +7,8 @@ import HowitWorksBanner from './How-It-work/page';
 
 
 
+
+
 const Home = () => {
   return (
     <div>
