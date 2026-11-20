@@ -74,3 +74,28 @@ export const ServiceDatails = async ({ id }: { id: string }) => {
 
   return res.json();
 };
+
+export const BookingPost=async({data}:{data:object})=>{
+  const res =await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/booking`,{
+    method:"POST",
+    headers:{
+   "Content-Type":'application/json'
+    },
+    body:JSON.stringify(data)
+  })
+  return res.json()
+}
+export const getBookingEmail = async ({ email }: { email: string }) => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/booking/${encodeURIComponent(email)}`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch booking data");
+  }
+
+  return res.json();
+};

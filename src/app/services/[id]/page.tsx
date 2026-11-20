@@ -11,7 +11,6 @@ import Link from "next/link";
 
 import {
   ArrowLeft,
-  ArrowUpRight,
   Clock,
   MapPin,
   Wrench,
@@ -22,6 +21,9 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+import RequestRepairButton from "../requestbutton";
+
+// Details Content
 const DetailsContent = async ({
   params,
 }: {
@@ -40,7 +42,6 @@ const DetailsContent = async ({
     notFound();
   }
 
-  // Service Not Found
   if (!service || !service._id) {
     notFound();
   }
@@ -50,22 +51,21 @@ const DetailsContent = async ({
     headers: await headers(),
   });
 
-  const userRole = session?.user?.role;
+  const userRole = String(session?.user?.role || "")
+    .trim()
+    .toLowerCase();
 
   // Role Check
   const isAdmin = userRole === "admin";
   const isTechnician = userRole === "technician";
-  const isCustomer = userRole === "customer" || userRole === "user";
 
-  // Customer Only Approved & Available Services
-  if (!isAdmin && !isTechnician) {
-    if (
-      service.approvalStatus !== "approved" ||
-      service.isAvailable !== true
-    ) {
-      notFound();
-    }
-  }
+  const isCustomer =
+    !!session?.user && !isAdmin && !isTechnician;
+
+  // Availability Check
+  const isAvailable =
+    service.isAvailable === true ||
+    String(service.isAvailable).toLowerCase() === "true";
 
   // Technician Information
   const technicianName = service.technicianName || "Technician";
@@ -84,6 +84,19 @@ const DetailsContent = async ({
     service.technicianBio ||
     service.technician?.bio ||
     "Experienced technician dedicated to providing reliable and quality repair services.";
+
+  // Request Repair Data
+  const data = {
+    _id: String(service._id),
+    image: service.image,
+    title: service.title,
+    category: service.category,
+    isAvailable: isAvailable,
+    estimatedDuration: service.estimatedDuration,
+    description: service.description,
+    customerName: session?.user?.name || "",
+    customerEmail: session?.user?.email || "",
+  };
 
   return (
     <main className="min-h-screen bg-[#faf9f6] px-5 py-12 lg:px-8">
@@ -105,7 +118,6 @@ const DetailsContent = async ({
 
             {/* Service Image */}
             <div className="relative h-[300px] overflow-hidden rounded-3xl bg-gray-200 sm:h-[420px]">
-
               {service.image && (
                 <Image
                   src={service.image}
@@ -126,12 +138,12 @@ const DetailsContent = async ({
 
               <div
                 className={`absolute bottom-5 left-5 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-lg ${
-                  service.isAvailable
+                  isAvailable
                     ? "bg-green-500"
                     : "bg-red-500"
                 }`}
               >
-                {service.isAvailable ? (
+                {isAvailable ? (
                   <>
                     <CheckCircle2 size={16} />
                     Available
@@ -139,7 +151,7 @@ const DetailsContent = async ({
                 ) : (
                   <>
                     <AlertCircle size={16} />
-                    Unavailable
+                    Not Available
                   </>
                 )}
               </div>
@@ -147,9 +159,7 @@ const DetailsContent = async ({
 
             {/* Service Title */}
             <div>
-
               <div className="mb-4 flex flex-wrap items-center gap-3">
-
                 <span className="rounded-full bg-[#243b53]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#243b53]">
                   {service.category}
                 </span>
@@ -158,7 +168,6 @@ const DetailsContent = async ({
                   <ShieldCheck size={15} />
                   Verified Service
                 </span>
-
               </div>
 
               <h1 className="text-3xl font-bold leading-tight text-[#243b53] sm:text-4xl lg:text-5xl">
@@ -168,12 +177,10 @@ const DetailsContent = async ({
               <p className="mt-5 text-base leading-8 text-gray-600">
                 {service.description}
               </p>
-
             </div>
 
             {/* Service Information */}
             <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8">
-
               <h2 className="mb-7 text-xl font-bold text-[#243b53]">
                 Service Information
               </h2>
@@ -253,7 +260,6 @@ const DetailsContent = async ({
 
             {/* Technician Summary */}
             <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8">
-
               <div className="mb-6 flex items-center gap-2">
                 <UserRound size={21} className="text-[#d28b53]" />
 
@@ -266,7 +272,6 @@ const DetailsContent = async ({
 
                 {/* Technician Image */}
                 <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-[#243b53]/10">
-
                   {technicianPhoto ? (
                     <Image
                       src={technicianPhoto}
@@ -281,14 +286,11 @@ const DetailsContent = async ({
                       {technicianName.charAt(0).toUpperCase()}
                     </div>
                   )}
-
                 </div>
 
                 {/* Technician Details */}
                 <div className="flex-1">
-
                   <div className="flex flex-wrap items-center gap-2">
-
                     <h3 className="text-lg font-bold text-[#243b53]">
                       {technicianName}
                     </h3>
@@ -297,7 +299,6 @@ const DetailsContent = async ({
                       <CheckCircle2 size={12} />
                       Technician
                     </span>
-
                   </div>
 
                   <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
@@ -308,7 +309,6 @@ const DetailsContent = async ({
                   <p className="mt-4 text-sm leading-7 text-gray-500">
                     {technicianBio}
                   </p>
-
                 </div>
 
               </div>
@@ -318,18 +318,15 @@ const DetailsContent = async ({
 
           {/* Right Sidebar */}
           <aside className="lg:col-span-2">
-
             <div className="sticky top-24 space-y-5">
 
               {/* Price Card */}
               <div className="rounded-3xl border border-gray-100 bg-white p-7 shadow-sm">
-
                 <p className="text-sm font-semibold text-gray-400">
                   Starting Price
                 </p>
 
                 <div className="mt-2 flex items-baseline gap-1">
-
                   <span className="text-4xl font-extrabold text-[#243b53]">
                     ৳{service.basePrice}
                   </span>
@@ -337,7 +334,6 @@ const DetailsContent = async ({
                   <span className="text-sm text-gray-400">
                     / starting
                   </span>
-
                 </div>
 
                 <div className="my-7 border-t border-dashed border-gray-200" />
@@ -381,29 +377,29 @@ const DetailsContent = async ({
                 </div>
 
                 {/* Request Repair Button - Only Customer */}
-                {isCustomer &&
-                  service.approvalStatus === "approved" &&
-                  service.isAvailable === true && (
-                    <Link
-                      href={`/repair-request/${service._id}`}
-                      className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-[#243b53] px-6 py-4 font-bold text-white transition hover:bg-[#d28b53]"
+                {isCustomer && (
+                  isAvailable ? (
+                    <RequestRepairButton service={data} />
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      className="mt-7 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-gray-300 px-6 py-4 text-sm font-bold text-gray-500 opacity-80"
                     >
-                      Request Repair
-                      <ArrowUpRight size={19} />
-                    </Link>
-                  )}
+                      <Wrench size={18} />
+                      Service Not Available
+                    </button>
+                  )
+                )}
 
                 <p className="mt-4 text-center text-xs text-gray-400">
                   Final pricing may vary depending on the repair requirements.
                 </p>
-
               </div>
 
               {/* Trust Card */}
               <div className="rounded-3xl bg-[#243b53] p-6 text-white">
-
                 <div className="flex items-center gap-3">
-
                   <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10">
                     <ShieldCheck size={24} />
                   </div>
@@ -417,9 +413,7 @@ const DetailsContent = async ({
                       Quality service you can rely on.
                     </p>
                   </div>
-
                 </div>
-
               </div>
 
             </div>
