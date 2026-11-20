@@ -71,7 +71,6 @@ const Footer = () => {
                 { name: "Home", href: "/" },
                 { name: "Services", href: "/services" },
                 { name: "How It Works", href: "/about" },
-                { name: "Contact Us", href: "/contact" },
               ].map((link) => (
                 <li key={link.name}>
                   <Link
@@ -114,9 +113,7 @@ const Footer = () => {
 
           {/* Contact */}
           <div>
-            <h3 className="mb-6 text-sm font-bold uppercase tracking-wider text-[#e4a878]">
-              Contact Us
-            </h3>
+            
 
             <div className="space-y-5">
               {/* Address */}
@@ -139,7 +136,7 @@ const Footer = () => {
                 />
 
                 <p className="text-sm text-white/65">
-                  +880 1XXX-XXXXXX
+                  +880 1951066952
                 </p>
               </div>
 
@@ -151,7 +148,7 @@ const Footer = () => {
                 />
 
                 <p className="text-sm text-white/65">
-                  support@fixmate.com
+                 pranto7726@gmail.com
                 </p>
               </div>
             </div>
