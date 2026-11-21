@@ -99,3 +99,152 @@ export const getBookingEmail = async ({ email }: { email: string }) => {
 
   return res.json();
 };
+
+export const BookingDelete = async ({ id }: { id: string }) => {
+  const url = `${process.env.NEXT_PUBLIC_SERVER_URL}/bookingDelete/${id}`;
+
+  console.log("Delete URL:", url);
+
+  const res = await fetch(url, {
+    method: "DELETE",
+  });
+
+  const text = await res.text();
+
+  console.log("Response Status:", res.status);
+  console.log("Response:", text);
+
+  if (!res.ok) {
+    throw new Error(text || "Failed to delete booking");
+  }
+
+  return text ? JSON.parse(text) : {};
+};
+export const getTechnicianBookings = async ({
+  email,
+}: {
+  email: string;
+}) => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/technician-bookings/${encodeURIComponent(email)}`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch technician bookings");
+  }
+
+  return res.json();
+};
+
+export const UpdateService = async ({
+  id,
+  data,
+}: {
+  id: string;
+  data: Record<string, unknown>;
+}) => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/service/${id}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to update service");
+  }
+
+  return await res.json();
+};
+
+export const serviceDelete = async ({ id }: { id: string }) => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/serviceDelete/${id}`,
+    {
+      method: "DELETE",
+    }
+  );
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    console.log("Delete API Error:", data);
+    throw new Error(data.message || "Failed to delete service");
+  }
+
+  return data;
+};
+export const AllUser=async()=>{
+  const res=await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/user`)
+  return res.json()
+}
+export const updateUserRole = async ({
+  id,
+  role,
+}: {
+  id: string;
+  role: "admin" | "customer" | "technician";
+}) => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/user/${id}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ role }),
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to update user role");
+  }
+
+  return res.json();
+};
+export const deleteUser = async ({ id }: { id: string }) => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/users/${id}`,
+    {
+      method: "DELETE",
+    }
+  );
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || "Failed to delete user");
+  }
+
+  return res.json();
+};
+export const UpdateBookingStatus = async ({
+  id,
+  status,
+}: {
+  id: string;
+  status: "pending" | "accepted" | "rejected";
+}) => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/booking-status/${id}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status }),
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to update booking status");
+  }
+
+  return res.json();
+};

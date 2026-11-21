@@ -86,17 +86,23 @@ const DetailsContent = async ({
     "Experienced technician dedicated to providing reliable and quality repair services.";
 
   // Request Repair Data
-  const data = {
-    _id: String(service._id),
-    image: service.image,
-    title: service.title,
-    category: service.category,
-    isAvailable: isAvailable,
-    estimatedDuration: service.estimatedDuration,
-    description: service.description,
-    customerName: session?.user?.name || "",
-    customerEmail: session?.user?.email || "",
-  };
+// Request Repair Data
+const data = {
+  serviceId: String(service._id),
+
+  image: service.image,
+  title: service.title,
+  category: service.category,
+  isAvailable: isAvailable,
+  estimatedDuration: service.estimatedDuration,
+  description: service.description,
+
+  customerName: session?.user?.name || "",
+  customerEmail: session?.user?.email || "",
+
+  technicianName: service.technicianName,
+  technicianEmail: service.technicianEmail,
+};
 
   return (
     <main className="min-h-screen bg-[#faf9f6] px-5 py-12 lg:px-8">

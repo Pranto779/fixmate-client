@@ -13,9 +13,11 @@ import {
 } from "lucide-react";
 
 import { getallServices, Service } from "@/allapi";
+import { connection } from "next/server";
 
 // Services Content
 const ServicesContent = async () => {
+    await connection();
   const allservices = await getallServices();
 
   const services: Service[] = Array.isArray(allservices)
