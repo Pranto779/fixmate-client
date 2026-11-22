@@ -10,7 +10,6 @@ import {
   MapPin,
   Calendar,
   FileText,
-  CheckCircle2,
   Clock,
   Wallet,
   CreditCard,
@@ -59,6 +58,15 @@ interface Props {
   bookings: Booking[];
 }
 
+const statusOptions = [
+  "requested",
+  "accepted",
+  "rejected",
+  "in-progress",
+  "completed",
+  "cancelled",
+] as const;
+
 const ViewRequestedButton = ({ bookings }: Props) => {
   const [open, setOpen] = useState(false);
 
@@ -69,20 +77,22 @@ const ViewRequestedButton = ({ bookings }: Props) => {
 
   const [amount, setAmount] = useState("");
 
-  const [saving, setSaving] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  const [saving, setSaving] = useState(false);
 
   // Open Booking Details
   const handleView = (booking: Booking) => {
     setSelectedBooking(booking);
+
     setAmount(
       String(booking.finalAmount ?? booking.basePrice ?? "")
     );
   };
 
-  // Accept Request - MongoDB Update
-  const handleAccept = async () => {
-    if (!selectedBooking?._id) {
+  // Update Booking Status
+  const handleStatusChange = async (status: Booking["status"]) => {
+    if (!selectedBooking?._id || !status) {
       toast.error("Booking ID not found");
       return;
     }
@@ -92,55 +102,12 @@ const ViewRequestedButton = ({ bookings }: Props) => {
 
       const result = await UpdateBookingStatus({
         id: selectedBooking._id,
-        status: "accepted",
-      });
-
-      // Update Selected Booking
-      const updatedBooking: Booking = {
-        ...selectedBooking,
-        status: "accepted",
-      };
-
-      setSelectedBooking(updatedBooking);
-
-      // Update Booking List
-      setBookingList((prev) =>
-        prev.map((booking) =>
-          booking._id === selectedBooking._id
-            ? updatedBooking
-            : booking
-        )
-      );
-
-      toast.success(
-        result?.message || "Booking accepted successfully!"
-      );
-    } catch (error) {
-      console.error("Status Update Error:", error);
-      toast.error("Failed to accept booking");
-    } finally {
-      setUpdatingStatus(false);
-    }
-  };
-
-  // Reject Request - MongoDB Update
-  const handleReject = async () => {
-    if (!selectedBooking?._id) {
-      toast.error("Booking ID not found");
-      return;
-    }
-
-    try {
-      setUpdatingStatus(true);
-
-      const result = await UpdateBookingStatus({
-        id: selectedBooking._id,
-        status: "rejected",
+        status,
       });
 
       const updatedBooking: Booking = {
         ...selectedBooking,
-        status: "rejected",
+        status,
       };
 
       setSelectedBooking(updatedBooking);
@@ -154,47 +121,81 @@ const ViewRequestedButton = ({ bookings }: Props) => {
       );
 
       toast.success(
-        result?.message || "Booking rejected successfully!"
+        result?.message || "Booking status updated successfully!"
       );
     } catch (error) {
       console.error("Status Update Error:", error);
-      toast.error("Failed to reject booking");
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update booking status"
+      );
     } finally {
       setUpdatingStatus(false);
     }
   };
 
-  // Save Final Amount (UI Only)
-  const handleSaveAmount = () => {
-    if (!selectedBooking) return;
+  // Submit Final Amount
+  const handleSubmitAmount = async () => {
+    if (!selectedBooking?._id) {
+      toast.error("Booking ID not found");
+      return;
+    }
+
+    if (selectedBooking.status !== "completed") {
+      toast.error("Complete the job first");
+      return;
+    }
 
     const finalAmount = Number(amount);
 
-    if (!amount || isNaN(finalAmount) || finalAmount < 0) {
-      toast.error("Please enter a valid amount");
+    if (
+      amount.trim() === "" ||
+      !Number.isFinite(finalAmount) ||
+      finalAmount < 0
+    ) {
+      toast.error("Please enter a valid final amount");
       return;
     }
 
-    setSaving(true);
+    try {
+      setSaving(true);
 
-    const updatedBooking = {
-      ...selectedBooking,
-      finalAmount,
-    };
+      const result = await UpdateBookingStatus({
+        id: selectedBooking._id,
+        finalAmount,
+      });
 
-    setSelectedBooking(updatedBooking);
+      const updatedBooking: Booking = {
+        ...selectedBooking,
+        finalAmount,
+      };
 
-    setBookingList((prev) =>
-      prev.map((booking) =>
-        booking._id === selectedBooking._id
-          ? updatedBooking
-          : booking
-      )
-    );
+      setSelectedBooking(updatedBooking);
 
-    setSaving(false);
+      setBookingList((prev) =>
+        prev.map((booking) =>
+          booking._id === selectedBooking._id
+            ? updatedBooking
+            : booking
+        )
+      );
 
-    toast.success("Amount updated in this view");
+      toast.success(
+        result?.message || "Final amount saved successfully!"
+      );
+    } catch (error) {
+      console.error("Final Amount Error:", error);
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to save final amount"
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Status Colors
@@ -446,32 +447,57 @@ const ViewRequestedButton = ({ bookings }: Props) => {
                     Booking Status
                   </h3>
 
-                  <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 p-4">
-                    <span
-                      className={`rounded-full px-3 py-1.5 text-xs font-bold ${getStatusStyle(
-                        selectedBooking.status
-                      )}`}
-                    >
-                      {selectedBooking.status || "requested"}
-                    </span>
+                  <div className="space-y-3 rounded-xl border border-slate-200 p-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span
+                        className={`rounded-full px-3 py-1.5 text-xs font-bold ${getStatusStyle(
+                          selectedBooking.status
+                        )}`}
+                      >
+                        {selectedBooking.status || "requested"}
+                      </span>
 
-                    <span className="flex items-center gap-1.5 text-sm text-slate-500">
-                      <CreditCard size={16} />
-                      Payment: {selectedBooking.paymentStatus || "unpaid"}
-                    </span>
+                      <span className="flex items-center gap-1.5 text-sm text-slate-500">
+                        <CreditCard size={16} />
+                        Payment: {selectedBooking.paymentStatus || "unpaid"}
+                      </span>
+                    </div>
+
+                    <select
+                      value={selectedBooking.status || "requested"}
+                      onChange={(e) =>
+                        handleStatusChange(
+                          e.target.value as Booking["status"]
+                        )
+                      }
+                      disabled={updatingStatus}
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm font-medium capitalize text-slate-700 outline-none focus:border-[#243b53] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {statusOptions.map((status) => (
+                        <option key={status} value={status}>
+                          {status.replace("-", " ")}
+                        </option>
+                      ))}
+                    </select>
+
+                    {updatingStatus && (
+                      <p className="text-xs text-slate-500">
+                        Updating booking status...
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                {/* Final Amount */}
+                {/* Final Amount - Only When Completed */}
 
-                <div className="rounded-xl border border-slate-200 p-4">
-                  <h3 className="mb-4 flex items-center gap-2 font-bold text-[#243b53]">
-                    <Wallet size={18} />
-                    Final Amount
-                  </h3>
+                {selectedBooking.status === "completed" && (
+                  <div className="rounded-xl border border-slate-200 p-4">
+                    <h3 className="mb-4 flex items-center gap-2 font-bold text-[#243b53]">
+                      <Wallet size={18} />
+                      Final Amount
+                    </h3>
 
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <div className="relative flex-1">
+                    <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 font-semibold text-slate-500">
                         ৳
                       </span>
@@ -486,65 +512,21 @@ const ViewRequestedButton = ({ bookings }: Props) => {
                       />
                     </div>
 
+                    <p className="mt-2 text-xs text-slate-500">
+                      Base Price: ৳{selectedBooking.basePrice ?? 0}
+                    </p>
+
                     <button
-                      onClick={handleSaveAmount}
+                      onClick={handleSubmitAmount}
                       disabled={saving}
-                      className="flex items-center justify-center gap-2 rounded-lg bg-[#243b53] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#344f6b] disabled:opacity-50"
+                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#243b53] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#344f6b] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <Check size={16} />
-                      {saving ? "Saving..." : "Save Amount"}
+                      {saving ? "Saving..." : "Submit Final Amount"}
                     </button>
-                  </div>
-
-                  <p className="mt-2 text-xs text-slate-500">
-                    Base Price: ৳{selectedBooking.basePrice ?? 0}
-                  </p>
-                </div>
-
-                {/* Accept / Reject Request */}
-
-                {selectedBooking.status === "requested" ||
-                selectedBooking.status === "pending" ||
-                !selectedBooking.status ? (
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-
-                    {/* Accept */}
-
-                    <button
-                      onClick={handleAccept}
-                      disabled={updatingStatus}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <CheckCircle2 size={19} />
-
-                      {updatingStatus
-                        ? "Updating..."
-                        : "Accept Request"}
-                    </button>
-
-                    {/* Reject */}
-
-                    <button
-                      onClick={handleReject}
-                      disabled={updatingStatus}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-3 font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <X size={19} />
-
-                      {updatingStatus
-                        ? "Updating..."
-                        : "Reject Request"}
-                    </button>
-                  </div>
-                ) : (
-                  <div
-                    className={`rounded-xl p-3 text-center text-sm font-semibold capitalize ${getStatusStyle(
-                      selectedBooking.status
-                    )}`}
-                  >
-                    Current Status: {selectedBooking.status}
                   </div>
                 )}
+
               </div>
             )}
           </div>

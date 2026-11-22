@@ -74,7 +74,7 @@ export const ServiceDatails = async ({ id }: { id: string }) => {
 
   return res.json();
 };
-
+//customer
 export const BookingPost=async({data}:{data:object})=>{
   const res =await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/booking`,{
     method:"POST",
@@ -85,6 +85,7 @@ export const BookingPost=async({data}:{data:object})=>{
   })
   return res.json()
 }
+//customer
 export const getBookingEmail = async ({ email }: { email: string }) => {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_SERVER_URL}/booking/${encodeURIComponent(email)}`,
@@ -99,7 +100,7 @@ export const getBookingEmail = async ({ email }: { email: string }) => {
 
   return res.json();
 };
-
+//customer
 export const BookingDelete = async ({ id }: { id: string }) => {
   const url = `${process.env.NEXT_PUBLIC_SERVER_URL}/bookingDelete/${id}`;
 
@@ -120,6 +121,8 @@ export const BookingDelete = async ({ id }: { id: string }) => {
 
   return text ? JSON.parse(text) : {};
 };
+
+//technician
 export const getTechnicianBookings = async ({
   email,
 }: {
@@ -139,6 +142,7 @@ export const getTechnicianBookings = async ({
   return res.json();
 };
 
+//edit-service
 export const UpdateService = async ({
   id,
   data,
@@ -163,7 +167,7 @@ export const UpdateService = async ({
 
   return await res.json();
 };
-
+//technician
 export const serviceDelete = async ({ id }: { id: string }) => {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_SERVER_URL}/serviceDelete/${id}`,
@@ -185,6 +189,7 @@ export const AllUser=async()=>{
   const res=await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/user`)
   return res.json()
 }
+//admin
 export const updateUserRole = async ({
   id,
   role,
@@ -224,12 +229,16 @@ export const deleteUser = async ({ id }: { id: string }) => {
 
   return res.json();
 };
+
+///technician
 export const UpdateBookingStatus = async ({
   id,
   status,
+  finalAmount,
 }: {
   id: string;
-  status: "pending" | "accepted" | "rejected";
+  status?: string;
+  finalAmount?: number;
 }) => {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_SERVER_URL}/booking-status/${id}`,
@@ -238,13 +247,50 @@ export const UpdateBookingStatus = async ({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({
+        ...(status !== undefined && { status }),
+        ...(finalAmount !== undefined && { finalAmount }),
+      }),
     }
   );
 
+  const data = await res.json();
+
   if (!res.ok) {
-    throw new Error("Failed to update booking status");
+    throw new Error(data.message || "Failed to update booking");
   }
 
-  return res.json();
+  return data;
+};
+// Update Service Status
+export const UpdateServiceStatus = async ({
+  id,
+  approvalStatus,
+}: {
+  id: string;
+ approvalStatus: "pending" | "accepted" | "cancelled";
+}) => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/service-status/${id}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ approvalStatus }),
+    }
+  );
+
+  const text = await res.text();
+
+  console.log("Response Status:", res.status);
+  console.log("Response Body:", text);
+
+  const data = text ? JSON.parse(text) : {};
+
+  if (!res.ok) {
+    throw new Error(data.message || `Request failed: ${res.status}`);
+  }
+
+  return data;
 };

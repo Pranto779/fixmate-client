@@ -17,11 +17,15 @@ import { connection } from "next/server";
 
 // Services Content
 const ServicesContent = async () => {
-    await connection();
+  await connection();
+
   const allservices = await getallServices();
 
+  // Only Accepted Services
   const services: Service[] = Array.isArray(allservices)
-    ? allservices
+    ? allservices.filter(
+        (service: Service) => service.approvalStatus === "accepted"
+      )
     : [];
 
   return (
@@ -53,22 +57,9 @@ const ServicesContent = async () => {
                 </div>
 
                 {/* Approval Status */}
-                <div
-                  className={`absolute right-4 top-4 flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold shadow-sm ${
-                    service.approvalStatus === "approved"
-                      ? "bg-green-100 text-green-700"
-                      : service.approvalStatus === "rejected"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-amber-100 text-amber-700"
-                  }`}
-                >
-                  {service.approvalStatus === "approved" ? (
-                    <CheckCircle2 size={13} />
-                  ) : (
-                    <AlertCircle size={13} />
-                  )}
-
-                  {service.approvalStatus}
+                <div className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-green-100 px-3 py-1.5 text-xs font-bold text-green-700 shadow-sm">
+                  <CheckCircle2 size={13} />
+                  Accepted
                 </div>
 
                 {/* Price */}

@@ -11,7 +11,6 @@ import {
   MapPin,
   Calendar,
   FileText,
-  Wallet,
 } from "lucide-react";
 
 import DashboardShell from "@/app/dashboard/dashboard-component/dashboard-shell";
@@ -140,29 +139,30 @@ const BookingContent = async () => {
       </div>
 
       {/* Booking List */}
-      <div className="mx-auto max-w-4xl space-y-3">
+      <div className="mx-auto max-w-6xl space-y-3">
         {bookings.map((booking: Booking) => (
           <div
             key={booking._id}
             className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:border-[#243b53]/30 hover:shadow-md sm:flex-row"
           >
 
-            {/* Image */}
-            <div className="relative h-36 w-full shrink-0 overflow-hidden bg-slate-100 sm:h-auto sm:min-h-36 sm:w-36">
-              {booking.serviceImage ? (
-                <Image
-                  src={booking.serviceImage}
-                  alt={booking.serviceTitle || "Service"}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  sizes="(max-width: 640px) 100vw, 144px"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-slate-400">
-                  <Wrench size={35} />
-                </div>
-              )}
-            </div>
+            
+           {/* Image */}
+<div className="relative h-36 w-full shrink-0 overflow-hidden bg-slate-100 sm:h-auto sm:min-h-70 sm:w-52 md:w-70">
+  {booking.serviceImage ? (
+    <Image
+      src={booking.serviceImage}
+      alt={booking.serviceTitle || "Service"}
+      fill
+      className="object-cover transition-transform duration-500 group-hover:scale-105"
+      sizes="(max-width: 640px) 100vw, 224px"
+    />
+  ) : (
+    <div className="flex h-full items-center justify-center text-slate-400">
+      <Wrench size={35} />
+    </div>
+  )}
+</div>
 
             {/* Content */}
             <div className="flex min-w-0 flex-1 flex-col justify-center p-3 sm:p-4">
@@ -369,8 +369,12 @@ const BookingContent = async () => {
                   {/* Payment Button */}
                   <button
                     type="button"
-                    disabled
-                    className="inline-flex shrink-0 cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-[#243b53] px-4 py-2 text-xs font-semibold text-white opacity-90"
+                    disabled={booking.status !== "completed"}
+                    className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition ${
+                      booking.status === "completed"
+                        ? "bg-[#243b53] text-white hover:bg-[#344f6b]"
+                        : "cursor-not-allowed bg-[#243b53] text-white opacity-50"
+                    }`}
                   >
                     <CreditCard size={15} />
                     Pay Now
@@ -407,7 +411,7 @@ const CustomerBookingsPage = () => {
             {[1, 2, 3].map((item) => (
               <div
                 key={item}
-                className="mx-auto flex max-w-4xl animate-pulse flex-col overflow-hidden rounded-xl bg-slate-100 sm:flex-row"
+                className="mx-auto flex max-w-6xl animate-pulse flex-col overflow-hidden rounded-xl bg-slate-100 sm:flex-row"
               >
                 <div className="h-36 w-full bg-slate-200 sm:w-36" />
 
