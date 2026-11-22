@@ -64,7 +64,7 @@ const ServicesContent = async () => {
 
                 {/* Price */}
                 <div className="absolute bottom-4 right-4 rounded-xl bg-[#243b53] px-4 py-2 text-sm font-bold text-white shadow-lg">
-                  From ৳{service.basePrice}
+                  From ${service.basePrice}
                 </div>
               </div>
 

@@ -93,6 +93,7 @@ const data = {
   image: service.image,
   title: service.title,
   category: service.category,
+  basePrice: service.basePrice, // Added
   isAvailable: isAvailable,
   estimatedDuration: service.estimatedDuration,
   description: service.description,
@@ -334,7 +335,7 @@ const data = {
 
                 <div className="mt-2 flex items-baseline gap-1">
                   <span className="text-4xl font-extrabold text-[#243b53]">
-                    ৳{service.basePrice}
+                    ${service.basePrice}
                   </span>
 
                   <span className="text-sm text-gray-400">

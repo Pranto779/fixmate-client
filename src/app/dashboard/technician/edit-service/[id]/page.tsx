@@ -1,8 +1,8 @@
-
 "use client";
 
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+
 import {
   Wrench,
   Image as ImageIcon,
@@ -11,9 +11,11 @@ import {
   MapPin,
   Clock,
   Save,
+  Loader2,
 } from "lucide-react";
+
 import { toast } from "sonner";
-import { UpdateService } from "@/allapi";
+import { ServiceDatails, UpdateService } from "@/allapi";
 
 const UpdateMyserviceForm = () => {
   const params = useParams();
@@ -32,12 +34,48 @@ const UpdateMyserviceForm = () => {
     isAvailable: true,
   });
 
-  // কোন কোন field পরিবর্তন হয়েছে
   const [touchedFields, setTouchedFields] = useState<
     Set<keyof typeof formData>
   >(new Set());
 
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+
+  // Load Existing Service Data
+  useEffect(() => {
+    const loadService = async () => {
+      try {
+        if (!id) return;
+
+        setFetching(true);
+
+        const service = await ServiceDatails({ id });
+
+        if (!service) {
+          toast.error("Service not found!");
+          return;
+        }
+
+        setFormData({
+          title: service.title || "",
+          category: service.category || "",
+          price: String(service.basePrice ?? ""),
+          description: service.description || "",
+          image: service.image || "",
+          location: service.serviceArea || "",
+          estimatedDuration: service.estimatedDuration || "",
+          isAvailable: service.isAvailable ?? true,
+        });
+      } catch (error) {
+        console.error("Service fetch error:", error);
+        toast.error("Failed to load service!");
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    loadService();
+  }, [id]);
 
   // Handle Input Change
   const handleChange = (
@@ -90,13 +128,26 @@ const UpdateMyserviceForm = () => {
     try {
       setLoading(true);
 
-      // শুধু পরিবর্তিত field পাঠানো হবে
-      const updatedData: Record<string, string | number | boolean> = {};
+      // Map Form Fields to Database Fields
+      const fieldMapping: Record<string, string> = {
+        title: "title",
+        category: "category",
+        price: "basePrice",
+        description: "description",
+        image: "image",
+        location: "serviceArea",
+        estimatedDuration: "estimatedDuration",
+        isAvailable: "isAvailable",
+      };
+
+      // Only Changed Fields
+      const updatedData: Record<string, unknown> = {};
 
       touchedFields.forEach((field) => {
         const value = formData[field];
+        const databaseField = fieldMapping[field];
 
-        updatedData[field] =
+        updatedData[databaseField] =
           field === "price" ? Number(value) : value;
       });
 
@@ -105,25 +156,36 @@ const UpdateMyserviceForm = () => {
         data: updatedData,
       });
 
-      if (result.modifiedCount > 0) {
-        toast.success("Service updated successfully!");
-        router.back();
-      } else if (result.matchedCount > 0) {
-        toast.info("No changes were made.");
+      if (result.success) {
+        toast.success("Update request sent to admin successfully!");
+
+        router.push("/dashboard/technician/my-services");
+        router.refresh();
       } else {
-        toast.error("Service not found!");
+        toast.error(result.message || "Failed to submit update!");
       }
     } catch (error) {
       console.error("Update error:", error);
-      toast.error("Failed to update service!");
+      toast.error("Failed to submit service update!");
     } finally {
       setLoading(false);
     }
   };
 
+  // Loading Existing Service
+  if (fetching) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="flex items-center gap-3 text-sm font-medium text-[#243b53]">
+          <Loader2 size={20} className="animate-spin text-[#d28b53]" />
+          Loading service information...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-3xl">
-
       {/* Header */}
       <div className="mb-6">
         <div className="mb-2 flex items-center gap-2 text-[#d28b53]">
@@ -138,8 +200,25 @@ const UpdateMyserviceForm = () => {
         </h2>
 
         <p className="mt-1 text-sm text-slate-500">
-          Update only the information you want to change.
+          Update your service information. Changes will be sent to admin
+          for approval before going live.
         </p>
+      </div>
+
+      {/* Approval Notice */}
+      <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+        <Clock size={19} className="mt-0.5 shrink-0 text-amber-600" />
+
+        <div>
+          <p className="text-sm font-bold text-amber-800">
+            Admin Approval Required
+          </p>
+
+          <p className="mt-1 text-xs leading-5 text-amber-700">
+            Your updated information will not be visible to customers
+            until an admin reviews and approves your changes.
+          </p>
+        </div>
       </div>
 
       <form
@@ -311,16 +390,12 @@ const UpdateMyserviceForm = () => {
             aria-checked={formData.isAvailable}
             aria-label="Toggle service availability"
             className={`relative h-7 w-12 shrink-0 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#d28b53]/30 ${
-              formData.isAvailable
-                ? "bg-green-500"
-                : "bg-slate-300"
+              formData.isAvailable ? "bg-green-500" : "bg-slate-300"
             }`}
           >
             <span
               className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-300 ${
-                formData.isAvailable
-                  ? "translate-x-5"
-                  : "translate-x-0"
+                formData.isAvailable ? "translate-x-5" : "translate-x-0"
               }`}
             />
           </button>
@@ -329,16 +404,16 @@ const UpdateMyserviceForm = () => {
         {/* Submit */}
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || fetching}
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#243b53] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#304f70] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? (
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            <Loader2 size={17} className="animate-spin" />
           ) : (
             <Save size={18} />
           )}
 
-          {loading ? "Updating..." : "Update Service"}
+          {loading ? "Submitting for Approval..." : "Submit for Approval"}
         </button>
       </form>
     </div>

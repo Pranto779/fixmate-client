@@ -206,7 +206,7 @@ const RequestRepairButton = ({ service }: Props) => {
                 </p>
 
                 <p className="text-sm font-semibold text-green-600">
-                  ৳{service.basePrice}
+                  ${service.basePrice}
                 </p>
               </div>
             </div>
@@ -327,15 +327,16 @@ const RequestRepairButton = ({ service }: Props) => {
                     className="absolute left-3 top-3 text-gray-400"
                   />
 
-                  <textarea
-                    name="problemDescription"
-                    value={formData.problemDescription}
-                    onChange={handleChange}
-                    placeholder="Describe your device problem..."
-                    rows={3}
-                    required
-                    className="w-full resize-none rounded-xl border border-gray-300 bg-transparent py-3 pl-10 pr-4 text-gray-900 outline-none focus:border-[#243b53] dark:border-gray-700 dark:text-white"
-                  />
+               <textarea
+  name="problemDescription"
+  value={formData.problemDescription}
+  onChange={handleChange}
+  placeholder="Describe your device problem... (minimum 20 characters)"
+  rows={3}
+  required
+  minLength={20}
+  className="w-full resize-none rounded-xl border border-gray-300 bg-transparent py-3 pl-10 pr-4 text-gray-900 outline-none focus:border-[#243b53] dark:border-gray-700 dark:text-white"
+/>
                 </div>
               </div>
 

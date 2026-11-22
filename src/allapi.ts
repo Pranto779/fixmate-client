@@ -12,6 +12,10 @@ export interface Service {
   technicianEmail?: string;
   isAvailable: boolean;
   approvalStatus: "pending" | "accepted" | "cancelled";
+
+  // Re-Approval System
+  hasPendingUpdate?: boolean;
+  pendingUpdates?: Partial<Service>;
 }
 
 // Post Service
@@ -308,4 +312,51 @@ export const getAllBookings = async () => {
   }
 
   return res.json();
+};
+// ================= SERVICE RE-APPROVAL API =================
+
+// ================= SERVICE RE-APPROVAL API =================
+
+// Get Pending Service Updates (Admin)
+export const getPendingServiceUpdates = async (): Promise<Service[]> => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/pending-service-updates`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch pending service updates");
+  }
+
+  return res.json();
+};
+
+// Admin Approve / Reject Service Update
+export const reviewServiceUpdate = async ({
+  id,
+  action,
+}: {
+  id: string;
+  action: "approve" | "reject";
+}) => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/service-update-review/${id}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ action }),
+    }
+  );
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to review service update");
+  }
+
+  return data;
 };
