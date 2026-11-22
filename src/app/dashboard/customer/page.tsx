@@ -1,99 +1,312 @@
-import React from "react";
+import React, { Suspense } from "react";
 import {
   Wrench,
   CheckCircle2,
-  MapPin,
+  Clock,
   CalendarClock,
 } from "lucide-react";
 
 import DashboardShell from "@/app/dashboard/dashboard-component/dashboard-shell";
 import StatCard from "@/app/dashboard/dashboard-component/stat-card";
-import ListCard, { type ListItem } from "@/app/dashboard/dashboard-component/list-card";
+import ListCard, {
+  type ListItem,
+} from "@/app/dashboard/dashboard-component/list-card";
 
-// ================= DUMMY DATA =================
-// Replace with real API data later — the shell stays the same.
+import { ServerSession } from "@/serverapi";
+import { connection } from "next/server";
+import { getBookingEmail } from "@/allapi";
 
-const recentRequests: ListItem[] = [
-  {
-    id: "REQ-1042",
-    title: "AC not cooling properly",
-    meta: "14 Nov 2026",
-    badge: "In Progress",
-    badgeTone: "warning",
-  },
-  {
-    id: "REQ-1038",
-    title: "Washing machine drum noise",
-    meta: "09 Nov 2026",
-    badge: "Completed",
-    badgeTone: "success",
-  },
-  {
-    id: "REQ-1031",
-    title: "Refrigerator gas refill",
-    meta: "02 Nov 2026",
-    badge: "Completed",
-    badgeTone: "success",
-  },
-  {
-    id: "REQ-1027",
-    title: "Microwave not heating",
-    meta: "28 Oct 2026",
-    badge: "Cancelled",
-    badgeTone: "danger",
-  },
-];
+interface Booking {
+  _id: string;
+  title?: string;
+  serviceTitle?: string;
+  image?: string;
+  serviceImage?: string;
+  technicianName?: string;
+  technicianEmail?: string;
+  preferredDate?: string | Date;
+  status: string;
+  finalAmount?: number;
+  paymentStatus?: string;
+}
 
-// ================= CUSTOMER DASHBOARD =================
+const CustomerDashboardContent = async () => {
+  await connection();
 
-const CustomerDashboardPage = () => {
+  const user = await ServerSession();
+  const email = user?.email;
+
+  let bookings: Booking[] = [];
+
+  try {
+    if (email) {
+      const response = await getBookingEmail({ email });
+
+      bookings = Array.isArray(response) ? response : [];
+    }
+  } catch (error) {
+    console.error("Customer Dashboard Booking Error:", error);
+  }
+
+  // ================= BOOKING STATISTICS =================
+
+  const totalBookings = bookings.length;
+
+  const pendingBookings = bookings.filter((booking) =>
+    ["pending", "requested"].includes(
+      booking.status?.toLowerCase()
+    )
+  ).length;
+
+  const completedBookings = bookings.filter(
+    (booking) => booking.status?.toLowerCase() === "completed"
+  ).length;
+
+  const activeBookings = bookings.filter((booking) =>
+    ["accepted", "approved", "in-progress"].includes(
+      booking.status?.toLowerCase()
+    )
+  ).length;
+
+  // ================= UPCOMING APPOINTMENT =================
+
+  const now = new Date();
+
+  const upcomingBookings = bookings
+    .filter((booking) => {
+      const date = new Date(booking.preferredDate || "");
+
+      return (
+        ["accepted", "approved", "in-progress"].includes(
+          booking.status?.toLowerCase()
+        ) &&
+        !isNaN(date.getTime()) &&
+        date >= now
+      );
+    })
+    .sort(
+      (a, b) =>
+        new Date(a.preferredDate!).getTime() -
+        new Date(b.preferredDate!).getTime()
+    );
+
+  const nextAppointment = upcomingBookings[0];
+
+  // ================= RECENT BOOKINGS =================
+
+  const recentBookings: ListItem[] = [...bookings]
+    .sort((a, b) => {
+      const dateA = new Date(a.preferredDate || 0).getTime();
+      const dateB = new Date(b.preferredDate || 0).getTime();
+
+      return dateB - dateA;
+    })
+    .slice(0, 4)
+    .map((booking) => {
+      const statusConfig: Record<
+        string,
+        {
+          label: string;
+          tone: ListItem["badgeTone"];
+        }
+      > = {
+        pending: {
+          label: "Pending",
+          tone: "warning",
+        },
+        requested: {
+          label: "Requested",
+          tone: "warning",
+        },
+        accepted: {
+          label: "Accepted",
+          tone: "success",
+        },
+        approved: {
+          label: "Approved",
+          tone: "success",
+        },
+        "in-progress": {
+          label: "In Progress",
+          tone: "warning",
+        },
+        completed: {
+          label: "Completed",
+          tone: "success",
+        },
+        rejected: {
+          label: "Rejected",
+          tone: "danger",
+        },
+        cancelled: {
+          label: "Cancelled",
+          tone: "danger",
+        },
+      };
+
+      const currentStatus =
+        booking.status?.toLowerCase() || "pending";
+
+      const status = statusConfig[currentStatus] || {
+        label: currentStatus,
+        tone: "warning" as const,
+      };
+
+      const date = booking.preferredDate
+        ? new Date(booking.preferredDate).toLocaleDateString(
+            "en-GB",
+            {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            }
+          )
+        : "Date not available";
+
+      return {
+        id: booking._id,
+        title:
+          booking.title ||
+          booking.serviceTitle ||
+          "Service Booking",
+        meta: date,
+        badge: status.label,
+        badgeTone: status.tone,
+      };
+    });
+
+  // ================= APPOINTMENT DATE =================
+
+  const appointmentDate = nextAppointment?.preferredDate
+    ? new Date(nextAppointment.preferredDate)
+    : null;
+
+  const formattedAppointment =
+    appointmentDate && !isNaN(appointmentDate.getTime())
+      ? appointmentDate.toLocaleString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "No upcoming appointment";
+
+  // ================= UI =================
+
   return (
     <DashboardShell
       role="customer"
       title="Customer Dashboard"
-      subtitle="Track your repair requests, appointments and saved addresses — all in one place."
+      subtitle="Track your service bookings, manage appointments and monitor your requests."
     >
-      {/* ============ STATS ============ */}
+      {/* STATS */}
+
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           icon={Wrench}
-          label="Active Requests"
-          value="3"
-          hint="1 new this week"
+          label="Total Bookings"
+          value={String(totalBookings)}
+          hint="All your service bookings"
           tone="tan"
         />
 
         <StatCard
-          icon={CheckCircle2}
-          label="Completed Repairs"
-          value="12"
-          tone="emerald"
+          icon={Clock}
+          label="Active Bookings"
+          value={String(activeBookings + pendingBookings)}
+          hint="Pending and ongoing bookings"
+          tone="sky"
         />
 
         <StatCard
-          icon={MapPin}
-          label="Saved Addresses"
-          value="2"
-          tone="navy"
+          icon={CheckCircle2}
+          label="Completed Bookings"
+          value={String(completedBookings)}
+          hint="Successfully completed"
+          tone="emerald"
         />
       </div>
 
-      {/* ============ NEXT APPOINTMENT ============ */}
+      {/* NEXT APPOINTMENT */}
+
       <div className="mt-6">
         <StatCard
           icon={CalendarClock}
-          label="Next Appointment — AC servicing, Dhanmondi"
-          value="Tomorrow · 2:00 PM"
-          hint="Technician assigned"
+          label={
+            nextAppointment
+              ? `Next Appointment — ${
+                  nextAppointment.title ||
+                  nextAppointment.serviceTitle ||
+                  "Service"
+                }`
+              : "Next Appointment"
+          }
+          value={formattedAppointment}
+          hint={
+            nextAppointment
+              ? `Technician: ${
+                  nextAppointment.technicianName ||
+                  "Assigned Technician"
+                }`
+              : "You have no upcoming appointments"
+          }
           tone="sky"
         />
       </div>
 
-      {/* ============ RECENT REQUESTS ============ */}
+      {/* RECENT BOOKINGS */}
+
       <div className="mt-6">
-        <ListCard title="Recent Requests" items={recentRequests} />
+        <ListCard
+          title="Recent Bookings"
+          items={recentBookings}
+        />
       </div>
     </DashboardShell>
+  );
+};
+
+// ================= LOADING SKELETON =================
+
+const DashboardLoading = () => {
+  return (
+    <DashboardShell
+      role="customer"
+      title="Customer Dashboard"
+      subtitle="Track your service bookings, manage appointments and monitor your requests."
+    >
+      <div className="animate-pulse space-y-6">
+        {/* Stats Skeleton */}
+
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((item) => (
+            <div
+              key={item}
+              className="h-32 rounded-2xl border border-gray-200 bg-gray-100 dark:border-white/10 dark:bg-white/5"
+            />
+          ))}
+        </div>
+
+        {/* Appointment Skeleton */}
+
+        <div className="h-32 rounded-2xl border border-gray-200 bg-gray-100 dark:border-white/10 dark:bg-white/5" />
+
+        {/* Recent Bookings Skeleton */}
+
+        <div className="h-64 rounded-2xl border border-gray-200 bg-gray-100 dark:border-white/10 dark:bg-white/5" />
+      </div>
+    </DashboardShell>
+  );
+};
+
+// ================= MAIN PAGE =================
+
+const CustomerDashboardPage = () => {
+  return (
+    <Suspense fallback={<DashboardLoading />}>
+      <CustomerDashboardContent />
+    </Suspense>
   );
 };
 

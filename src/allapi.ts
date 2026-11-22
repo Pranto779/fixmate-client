@@ -11,8 +11,8 @@ export interface Service {
   technicianName: string;
   technicianEmail?: string;
   isAvailable: boolean;
-  approvalStatus: "pending" | "approved" | "rejected";
-};
+  approvalStatus: "pending" | "accepted" | "cancelled";
+}
 
 // Post Service
 export const Postservice = async (data: object) => {
@@ -293,4 +293,19 @@ export const UpdateServiceStatus = async ({
   }
 
   return data;
+};
+// Get All Bookings (Admin)
+export const getAllBookings = async () => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/booking`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch bookings");
+  }
+
+  return res.json();
 };
