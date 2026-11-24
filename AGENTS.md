@@ -47,7 +47,8 @@ Before the final response, run one reporting pass. If candidates remain, from th
 - `NEXT_PUBLIC_BASE_URL` — better-auth client `baseURL`; falls back to `http://localhost:3000`.
 - `MONGODB_URI`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` — better-auth server (`src/lib/auth.ts`, Mongo DB name `FIXMATE`).
 - `STRIPE_SECRET_KEY` — `src/lib/stripe.ts`.
-- `IMAGE_BB_API` and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` exist in `.env.local` but are unused in `src/`.
+- `IMAGE_BB_API` — **server-only** ImgBB key read by `src/app/api/imgbb/route.ts`; never send it to the browser.
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` exists in `.env.local` but is unused in `src/`.
 
 ## Architecture
 
@@ -55,6 +56,7 @@ Before the final response, run one reporting pass. If candidates remain, from th
 - Auth/roles: better-auth + Mongo adapter. Roles `customer | technician | admin` are set at signup from `signupRole` (`src/lib/auth.ts`). Single sources of truth: `src/lib/roles.ts` (role → dashboard path) and `src/lib/dashboard-nav.ts` (sidebar links; each href must match a file under `src/app/dashboard/<role>/...`).
 - **No `middleware.ts`** — every dashboard page must guard itself: server pages `await ServerSession()`, client pages use `useSession()` from `@/lib/auth-client`. `/dashboard` itself is only a client-side role redirector.
 - Payment flow: `src/app/check-out` → `POST /api/checkout_sessions` → backend `/verify-session?session_id=...`.
+- Image uploads: `src/components/image-upload.tsx` (shared file-picker/preview used by sign-up, profile, add-service, edit-service) → `uploadToImgBB()` in `src/lib/imgbb.ts` → `src/app/api/imgbb/route.ts`, which reads the server-only `IMAGE_BB_API` key. Stored/returned values stay plain image URLs (`image: string`), so display code is upload-agnostic.
 - UI: shadcn/ui, style `base-nova` on `@base-ui/react` (`components.json`) — add components with `npx shadcn add <name>`. `cn` is re-exported from the `cn` npm package in `src/lib/utils.ts` (not clsx + tailwind-merge).
 - Tailwind v4 is CSS-first (no `tailwind.config`); the loader is wired in `next.config.ts` under `turbopack.rules`.
 
