@@ -27,7 +27,7 @@ export function validateImageFile(file: File): string | null {
 
 /**
  * Uploads through the app's own API route so the ImgBB key never reaches the
- * browser. The route enforces sign-in, the admin role and file validation.
+ * browser. The route enforces file validation on the server.
  */
 export async function uploadImageToImgbb(file: File): Promise<string> {
   const formData = new FormData();
@@ -36,7 +36,7 @@ export async function uploadImageToImgbb(file: File): Promise<string> {
   let response: Response;
 
   try {
-    response = await fetch("/api/upload/image", {
+    response = await fetch("/api/upload/imgbb", {
       method: "POST",
       body: formData,
     });
@@ -48,11 +48,13 @@ export async function uploadImageToImgbb(file: File): Promise<string> {
 
   const result = (await response
     .json()
-    .catch(() => null)) as { imageUrl?: string; error?: string } | null;
+    .catch(() => null)) as { url?: string; imageUrl?: string; error?: string } | null;
 
-  if (!response.ok || !result?.imageUrl) {
+  const uploadedUrl = result?.imageUrl ?? result?.url;
+
+  if (!response.ok || !uploadedUrl) {
     throw new Error(result?.error ?? "Could not upload the image. Please try again.");
   }
 
-  return result.imageUrl;
+  return uploadedUrl;
 }
