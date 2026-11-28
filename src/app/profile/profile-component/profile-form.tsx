@@ -5,6 +5,7 @@ import { Loader2, Save, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 import { authClient, useSession } from "@/lib/auth-client";
+import ImageUpload from "@/components/image-upload";
 
 // ================= PROFILE FORM =================
 
@@ -113,25 +114,15 @@ const ProfileForm = ({ user }: ProfileFormProps) => {
           />
         </div>
 
-        {/* Avatar URL */}
-        <div>
-          <label htmlFor="profile-image" className={LABEL_CLASSES}>
-            Avatar URL
-          </label>
-
-          <input
-            id="profile-image"
-            type="url"
-            value={image}
-            onChange={(e) => setImage(e.target.value)}
-            placeholder="https://example.com/photo.jpg"
-            className={INPUT_CLASSES}
-          />
-
-          <p className="mt-1.5 text-xs text-stone-400">
-            Paste a direct image link. Leave empty to use your initials.
-          </p>
-        </div>
+        {/* Avatar */}
+        <ImageUpload
+          id="profile-image"
+          label="Profile Photo"
+          value={image}
+          onChange={setImage}
+          allowRemove
+          hint="Leave empty to use your initials."
+        />
 
         {/* Phone */}
         <div>

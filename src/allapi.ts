@@ -79,16 +79,37 @@ export const ServiceDatails = async ({ id }: { id: string }) => {
   return res.json();
 };
 //customer
-export const BookingPost=async({data}:{data:object})=>{
-  const res =await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/booking`,{
-    method:"POST",
-    headers:{
-   "Content-Type":'application/json'
-    },
-    body:JSON.stringify(data)
-  })
-  return res.json()
-}
+export const BookingPost = async ({ data }: { data: object }) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SERVER_URL}/booking`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      }
+    );
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      return {
+        success: false,
+        message: result.message || "Booking failed",
+      };
+    }
+
+    return result;
+  } catch (error) {
+    return {
+      success: false,
+      message: "Something went wrong. Please try again.",
+    };
+  }
+};
+
 //customer
 export const getBookingEmail = async ({ email }: { email: string }) => {
   const res = await fetch(

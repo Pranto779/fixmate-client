@@ -146,23 +146,22 @@ const BookingContent = async () => {
             className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:border-[#243b53]/30 hover:shadow-md sm:flex-row"
           >
 
-            
-           {/* Image */}
-<div className="relative h-36 w-full shrink-0 overflow-hidden bg-slate-100 sm:h-auto sm:min-h-70 sm:w-52 md:w-70">
-  {booking.serviceImage ? (
-    <Image
-      src={booking.serviceImage}
-      alt={booking.serviceTitle || "Service"}
-      fill
-      className="object-cover transition-transform duration-500 group-hover:scale-105"
-      sizes="(max-width: 640px) 100vw, 224px"
-    />
-  ) : (
-    <div className="flex h-full items-center justify-center text-slate-400">
-      <Wrench size={35} />
-    </div>
-  )}
-</div>
+            {/* Image */}
+            <div className="relative h-36 w-full shrink-0 overflow-hidden bg-slate-100 sm:h-auto sm:min-h-70 sm:w-52 md:w-70">
+              {booking.serviceImage ? (
+                <Image
+                  src={booking.serviceImage}
+                  alt={booking.serviceTitle || "Service"}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  sizes="(max-width: 640px) 100vw, 224px"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-slate-400">
+                  <Wrench size={35} />
+                </div>
+              )}
+            </div>
 
             {/* Content */}
             <div className="flex min-w-0 flex-1 flex-col justify-center p-3 sm:p-4">
@@ -304,7 +303,7 @@ const BookingContent = async () => {
                   </p>
 
                   <p className="text-base font-bold text-[#243b53]">
-                    ৳{booking.basePrice ?? 0}
+                    ${booking.basePrice ?? 0}
                   </p>
                 </div>
 
@@ -315,7 +314,7 @@ const BookingContent = async () => {
                   </p>
 
                   <p className="text-base font-bold text-[#8c6548]">
-                    ৳{booking.finalAmount ?? booking.basePrice ?? 0}
+                    ${booking.finalAmount ?? booking.basePrice ?? 0}
                   </p>
                 </div>
 
@@ -367,18 +366,39 @@ const BookingContent = async () => {
                   )}
 
                   {/* Payment Button */}
-                  <button
-                    type="button"
-                    disabled={booking.status !== "completed"}
-                    className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition ${
-                      booking.status === "completed"
-                        ? "bg-[#243b53] text-white hover:bg-[#344f6b]"
-                        : "cursor-not-allowed bg-[#243b53] text-white opacity-50"
-                    }`}
-                  >
-                    <CreditCard size={15} />
-                    Pay Now
-                  </button>
+                {/* Payment Button */}
+{booking.paymentStatus === "paid" ? (
+  <button
+    type="button"
+    disabled
+    className="inline-flex shrink-0 cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white opacity-70"
+  >
+    <CreditCard size={15} />
+    Paid
+  </button>
+) : booking.status === "completed" && booking._id ? (
+  <Link
+    href={{
+      pathname: "/check-out",
+      query: {
+        booking: JSON.stringify(booking),
+      },
+    }}
+    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#243b53] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#344f6b]"
+  >
+    <CreditCard size={15} />
+    Pay Now
+  </Link>
+) : (
+  <button
+    type="button"
+    disabled
+    className="inline-flex shrink-0 cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-[#243b53] px-4 py-2 text-xs font-semibold text-white opacity-50"
+  >
+    <CreditCard size={15} />
+    Pay Now
+  </button>
+)}
 
                 </div>
               </div>

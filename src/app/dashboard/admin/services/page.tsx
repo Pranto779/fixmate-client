@@ -119,7 +119,7 @@ const updateFieldLabels: Record<string, string> = {
   category: "Category",
   basePrice: "Price",
   description: "Description",
-  image: "Image URL",
+  image: "Service Image",
   serviceArea: "Location",
   estimatedDuration: "Duration",
   isAvailable: "Availability",

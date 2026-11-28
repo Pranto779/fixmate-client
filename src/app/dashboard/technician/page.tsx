@@ -19,10 +19,10 @@ import {
   Settings,
   FilePlus2,
   ListChecks,
-  Wallet,
 } from "lucide-react";
 
 import DashboardShell from "@/app/dashboard/dashboard-component/dashboard-shell";
+import TotalEarningsCard from "@/app/dashboard/technician/TotalEarningsCard";
 import { ServerSession } from "@/serverapi";
 
 import {
@@ -265,9 +265,11 @@ function DashboardTabs() {
 function Statistics({
   services,
   bookings,
+  technicianEmail,
 }: {
   services: Service[];
   bookings: Booking[];
+  technicianEmail: string;
 }) {
   const approved = services.filter(
     (service) => service.approvalStatus === "accepted"
@@ -310,13 +312,6 @@ function Statistics({
       color: "text-blue-600",
       bg: "bg-blue-50",
     },
-    {
-      label: "Total Earnings",
-      value: "৳ 0.00",
-      icon: Wallet,
-      color: "text-[#d28b53]",
-      bg: "bg-[#f4e7db]",
-    },
   ];
 
   return (
@@ -351,6 +346,9 @@ function Statistics({
           </div>
         );
       })}
+
+      {/* Live paid total — client-fetched, same card shell as above */}
+      <TotalEarningsCard email={technicianEmail} />
     </div>
   );
 }
@@ -922,7 +920,7 @@ async function TechnicianOverviewContent() {
             </h1>
 
             <p className="mt-1 text-xs text-gray-500">
-              Here's what's happening with your business.
+              Here&apos;s what&apos;s happening with your business.
             </p>
           </div>
 
@@ -945,6 +943,7 @@ async function TechnicianOverviewContent() {
         <Statistics
           services={services}
           bookings={bookings}
+          technicianEmail={technicianEmail}
         />
 
         {/* REQUEST OVERVIEW */}

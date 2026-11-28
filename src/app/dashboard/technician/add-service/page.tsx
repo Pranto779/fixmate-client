@@ -1,11 +1,12 @@
 "use client";
 
 import React, { ChangeEvent, FormEvent, useState } from "react";
-import { Wrench, Image as ImageIcon, Plus } from "lucide-react";
+import { Wrench, Plus } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
 
 import type { Role } from "@/lib/roles";
 import DashboardShell from "../../dashboard-component/dashboard-shell";
+import ImageUpload from "@/components/image-upload";
 
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -23,6 +24,8 @@ const categories = [
 
 const AddServiceForm = () => {
   const [isAvailable, setIsAvailable] = useState(true);
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageUploading, setImageUploading] = useState(false);
   const router=useRouter()
 
   const { data: session } = useSession();
@@ -39,11 +42,22 @@ const AddServiceForm = () => {
 const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
   e.preventDefault();
 
+  if (imageUploading) {
+    toast.info("Please wait for the image to finish uploading.");
+    return;
+  }
+
+  if (!imageUrl) {
+    toast.error("Please upload a service image.");
+    return;
+  }
+
   const form = e.currentTarget;
   const formdata = new FormData(form);
 
   const data = {
     ...Object.fromEntries(formdata.entries()),
+    image: imageUrl,
     basePrice: Number(formdata.get("basePrice")),
     isAvailable,
     technicianName: user?.name,
@@ -59,6 +73,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
   if (post.insertedId) {
     toast.success("Service added successfully!");
     form.reset();
+    setImageUrl("");
     setIsAvailable(true);
     router.push('/dashboard/technician/my-services')
   } else {
@@ -133,25 +148,17 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
               </select>
             </div>
 
-            {/* Image URL */}
-            <div>
-              <label className={labelClass}>Service Image URL *</label>
-
-              <div className="relative">
-                <ImageIcon
-                  size={16}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                />
-
-                <input
-                  type="url"
-                  name="image"
-                  placeholder="Enter ImgBB image URL"
-                  className={`${inputClass} pl-9`}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+            {/* Image */}
+            <div className="sm:col-span-2">
+              <ImageUpload
+                label="Service Image"
+                required
+                value={imageUrl}
+                onChange={setImageUrl}
+                onUploadingChange={setImageUploading}
+                hint="Customers will see this image on your service listing."
+                buttonClassName={`${inputClass} w-auto cursor-pointer sm:w-auto`}
+              />
             </div>
 
             {/* Base Price */}
@@ -259,10 +266,11 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
           <div className="mt-4 border-t border-gray-100 pt-3">
             <button
               type="submit"
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#243b53] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#d28b53] sm:w-auto sm:min-w-40"
+              disabled={imageUploading}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#243b53] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#d28b53] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-w-40"
             >
               <Plus size={17} />
-              Add Service
+              {imageUploading ? "Uploading image..." : "Add Service"}
             </button>
           </div>
         </form>

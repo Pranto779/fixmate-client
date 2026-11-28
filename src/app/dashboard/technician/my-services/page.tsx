@@ -22,6 +22,19 @@ import { getService, Service } from "@/allapi";
 import { ServerSession } from "@/serverapi";
 import DeleteServiceButton from "./delete-service-button";
 
+const fieldLabels: Record<string, string> = {
+  title: "Service Title",
+  category: "Category",
+  basePrice: "Price",
+  description: "Description",
+  image: "Service Image",
+  serviceArea: "Service Area",
+  estimatedDuration: "Estimated Duration",
+  serviceMode: "Service Mode",
+  isAvailable: "Availability",
+  technicianName: "Technician Name",
+};
+
 const TechnicianMyServicesContent = async () => {
   await connection();
 
@@ -72,6 +85,31 @@ const TechnicianMyServicesContent = async () => {
                   : service.approvalStatus === "cancelled"
                     ? "cancelled"
                     : "pending";
+
+              // Dynamic Pending Fields
+              const pendingUpdates =
+                service.pendingUpdates as Record<string, unknown> | undefined;
+
+              const pendingFields = pendingUpdates
+                ? Object.entries(pendingUpdates)
+                    .filter(([, value]) => value !== undefined)
+                    .map(([key]) => {
+                      const oldValue = (
+                        service as unknown as Record<string, unknown>
+                      )[key];
+
+                      const isNew =
+                        oldValue === undefined ||
+                        oldValue === null ||
+                        oldValue === "";
+
+                      return {
+                        key,
+                        label: fieldLabels[key] || key,
+                        type: isNew ? "New" : "Updated",
+                      };
+                    })
+                : [];
 
               return (
                 <div
@@ -152,6 +190,56 @@ const TechnicianMyServicesContent = async () => {
                         </span>
                       </div>
 
+                      {/* Dynamic Admin Approval Notice */}
+                      {service.hasPendingUpdate && (
+                        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                          <div className="flex items-center gap-2 text-amber-800">
+                            <Clock size={14} />
+
+                            <p className="text-xs font-bold">
+                              Waiting for Admin Approval
+                            </p>
+                          </div>
+
+                          <p className="mt-2 text-[11px] leading-5 text-amber-700">
+                            Admin approval is required. These fields will
+                            only be added or updated after admin approval.
+                            Until then, customers will continue to see the
+                            previously approved information.
+                          </p>
+
+                          {/* Dynamic Field Names */}
+                          {pendingFields.length > 0 && (
+                            <div className="mt-3">
+                              <p className="mb-2 text-[10px] font-bold text-amber-800">
+                                Fields Waiting for Approval:
+                              </p>
+
+                              <div className="flex flex-wrap gap-2">
+                                {pendingFields.map((field) => (
+                                  <span
+                                    key={field.key}
+                                    className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-white px-2.5 py-1.5 text-[10px] font-semibold text-amber-800"
+                                  >
+                                    {field.label}
+
+                                    <span
+                                      className={`rounded px-1.5 py-0.5 text-[8px] font-bold ${
+                                        field.type === "New"
+                                          ? "bg-green-100 text-green-700"
+                                          : "bg-blue-100 text-blue-700"
+                                      }`}
+                                    >
+                                      {field.type}
+                                    </span>
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {/* Information */}
                       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                         {/* Price */}
@@ -161,7 +249,7 @@ const TechnicianMyServicesContent = async () => {
                           </p>
                           <p className="mt-0.5 text-base font-extrabold text-[#243b53]">
                             <span className="mr-0.5 text-xs text-[#c58a5b]">
-                              ৳
+                              $
                             </span>
                             {service.basePrice}
                           </p>

@@ -1,8 +1,8 @@
-
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+
 import {
   Smartphone,
   Laptop,
@@ -13,16 +13,16 @@ import {
   Zap,
   ShieldCheck,
   Users,
-  CheckCircle2,
   Wallet,
   Clock,
   Star,
-  ArrowRight,
   ArrowUpRight,
   Wrench,
   BadgeCheck,
   Headphones,
 } from "lucide-react";
+
+import { getallServices, Service } from "@/allapi";
 
 const categories = [
   {
@@ -31,7 +31,7 @@ const categories = [
     description: "Mobile repair & servicing",
     icon: Smartphone,
     color: "bg-blue-50 text-blue-600",
-    count: "120+ Services",
+    dbCategories: ["smartphone", "mobile", "mobile phone"],
   },
   {
     id: "laptop-pc",
@@ -39,7 +39,7 @@ const categories = [
     description: "Computer repair solutions",
     icon: Laptop,
     color: "bg-purple-50 text-purple-600",
-    count: "85+ Services",
+    dbCategories: ["laptop & pc", "laptop", "pc", "computer"],
   },
   {
     id: "ac",
@@ -47,7 +47,7 @@ const categories = [
     description: "AC repair & installation",
     icon: AirVent,
     color: "bg-cyan-50 text-cyan-600",
-    count: "95+ Services",
+    dbCategories: ["ac", "air conditioner", "air conditioning"],
   },
   {
     id: "refrigerator",
@@ -55,7 +55,7 @@ const categories = [
     description: "Fridge repair & maintenance",
     icon: Refrigerator,
     color: "bg-green-50 text-green-600",
-    count: "65+ Services",
+    dbCategories: ["refrigerator", "fridge"],
   },
   {
     id: "tv",
@@ -63,7 +63,7 @@ const categories = [
     description: "LED, LCD & Smart TV repair",
     icon: Tv,
     color: "bg-orange-50 text-orange-600",
-    count: "50+ Services",
+    dbCategories: ["tv", "television"],
   },
   {
     id: "washing-machine",
@@ -71,7 +71,7 @@ const categories = [
     description: "Washer repair & servicing",
     icon: WashingMachine,
     color: "bg-pink-50 text-pink-600",
-    count: "70+ Services",
+    dbCategories: ["washing machine", "washer"],
   },
   {
     id: "electrical",
@@ -79,7 +79,7 @@ const categories = [
     description: "Home electrical solutions",
     icon: Zap,
     color: "bg-yellow-50 text-yellow-600",
-    count: "110+ Services",
+    dbCategories: ["electrical", "electric"],
   },
 ];
 
@@ -160,11 +160,31 @@ const testimonials = [
 ];
 
 const PopularCategories = () => {
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const selectedCategory = categories.find(
-    (category) => category.id === activeCategory
-  );
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const data = await getallServices();
+
+        if (Array.isArray(data)) {
+          setServices(
+            data.filter(
+              (service: Service) =>
+                service.approvalStatus === "accepted"
+            )
+          );
+        }
+      } catch (error) {
+        console.error("Failed to load category counts:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
 
   return (
     <>
@@ -192,24 +212,20 @@ const PopularCategories = () => {
 
           {/* Category Cards */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-
             {categories.map((category) => {
               const Icon = category.icon;
-              const isActive = activeCategory === category.id;
+
+              const count = services.filter((service) =>
+                category.dbCategories.includes(
+                  service.category?.trim().toLowerCase()
+                )
+              ).length;
 
               return (
-                <button
+                <Link
                   key={category.id}
-                  onClick={() =>
-                    setActiveCategory(
-                      isActive ? "all" : category.id
-                    )
-                  }
-                  className={`group relative flex min-h-[190px] flex-col items-start rounded-2xl border p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-6 ${
-                    isActive
-                      ? "border-[#d28b53] bg-[#faf5ef] shadow-lg shadow-[#d28b53]/10"
-                      : "border-stone-200 bg-[#faf9f6] hover:border-[#d28b53]/50"
-                  }`}
+                  href={`/services?category=${encodeURIComponent(category.id)}`}
+                  className="group relative flex min-h-[190px] flex-col items-start rounded-2xl border border-stone-200 bg-[#faf9f6] p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-[#d28b53]/50 hover:shadow-xl sm:p-6"
                 >
                   {/* Icon */}
                   <div
@@ -229,73 +245,16 @@ const PopularCategories = () => {
 
                   <div className="mt-auto flex w-full items-center justify-between pt-4">
                     <span className="text-[10px] font-bold text-[#8c6548] sm:text-xs">
-                      {category.count}
+                      {loading ? "Loading..." : `${count} Services`}
                     </span>
 
-                    <span
-                      className={`flex h-7 w-7 items-center justify-center rounded-full transition-all ${
-                        isActive
-                          ? "bg-[#d28b53] text-white"
-                          : "bg-[#e9d8c5]/60 text-[#8c6548] group-hover:bg-[#d28b53] group-hover:text-white"
-                      }`}
-                    >
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#e9d8c5]/60 text-[#8c6548] transition-all group-hover:bg-[#d28b53] group-hover:text-white">
                       <ArrowUpRight size={15} />
                     </span>
                   </div>
-
-                  {isActive && (
-                    <span className="absolute right-3 top-3">
-                      <CheckCircle2
-                        size={18}
-                        className="text-[#d28b53]"
-                      />
-                    </span>
-                  )}
-                </button>
+                </Link>
               );
             })}
-
-          </div>
-
-          {/* Selected Category Info */}
-          <div className="mt-8 overflow-hidden rounded-2xl border border-[#e9d8c5] bg-[#faf9f6] p-6 sm:p-8">
-            <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
-
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-[#d28b53]">
-                  {selectedCategory
-                    ? "Selected Category"
-                    : "Explore All Categories"}
-                </p>
-
-                <h3 className="mt-2 text-xl font-extrabold text-[#243b53] sm:text-2xl">
-                  {selectedCategory
-                    ? `${selectedCategory.name} Repair Services`
-                    : "Find the Right Repair Service"}
-                </h3>
-
-                <p className="mt-2 text-sm text-stone-500">
-                  {selectedCategory
-                    ? `Explore professional ${selectedCategory.name.toLowerCase()} repair services from trusted technicians.`
-                    : "Choose a category above and discover services that match your needs."}
-                </p>
-              </div>
-
-              <Link
-                href={
-                  selectedCategory
-                    ? `/services?category=${selectedCategory.id}`
-                    : "/services"
-                }
-                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#243b53] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-[#d28b53]"
-              >
-                {selectedCategory
-                  ? "View Services"
-                  : "Browse All Services"}
-
-                <ArrowRight size={17} />
-              </Link>
-            </div>
           </div>
 
         </div>
@@ -304,13 +263,12 @@ const PopularCategories = () => {
       {/* WHY CHOOSE US */}
       <section className="relative overflow-hidden bg-[#243b53] px-4 py-20 sm:px-6 lg:px-8">
 
-        {/* Background Decorations */}
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full border-[45px] border-white/[0.04]" />
+
         <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full border-[55px] border-white/[0.04]" />
 
         <div className="relative mx-auto max-w-7xl">
 
-          {/* Heading */}
           <div className="mx-auto mb-14 max-w-2xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#e9c09d]">
               <ShieldCheck size={15} />
@@ -328,9 +286,7 @@ const PopularCategories = () => {
             </p>
           </div>
 
-          {/* Trust Points */}
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-
             {trustPoints.map((point, index) => {
               const Icon = point.icon;
 
@@ -357,12 +313,10 @@ const PopularCategories = () => {
                 </div>
               );
             })}
-
           </div>
 
           {/* Platform Stats */}
           <div className="mt-16 grid grid-cols-1 gap-5 border-t border-white/15 pt-10 sm:grid-cols-3">
-
             {stats.map((stat, index) => {
               const Icon = stat.icon;
 
@@ -387,7 +341,6 @@ const PopularCategories = () => {
                 </div>
               );
             })}
-
           </div>
 
         </div>
@@ -397,7 +350,6 @@ const PopularCategories = () => {
       <section className="bg-[#faf9f6] px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
 
-          {/* Heading */}
           <div className="mb-12 text-center">
             <span className="inline-flex items-center gap-2 rounded-full bg-[#e9d8c5]/50 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#8c6548]">
               <Star size={14} />
@@ -414,16 +366,12 @@ const PopularCategories = () => {
             </p>
           </div>
 
-          {/* Testimonials */}
           <div className="grid gap-6 md:grid-cols-3">
-
             {testimonials.map((testimonial, index) => (
               <div
                 key={index}
                 className="flex h-full flex-col rounded-2xl border border-stone-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
-
-                {/* Stars */}
                 <div className="flex gap-1">
                   {[...Array(testimonial.rating)].map((_, i) => (
                     <Star
@@ -434,12 +382,10 @@ const PopularCategories = () => {
                   ))}
                 </div>
 
-                {/* Review */}
                 <p className="my-6 flex-1 text-sm leading-7 text-stone-600">
                   “{testimonial.review}”
                 </p>
 
-                {/* Customer */}
                 <div className="flex items-center gap-3 border-t border-stone-100 pt-5">
                   <img
                     src={testimonial.image}
@@ -462,10 +408,8 @@ const PopularCategories = () => {
                     </p>
                   </div>
                 </div>
-
               </div>
             ))}
-
           </div>
 
         </div>

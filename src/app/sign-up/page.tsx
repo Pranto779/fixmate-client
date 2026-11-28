@@ -9,7 +9,6 @@ import {
   Lock,
   Eye,
   EyeOff,
-  Image as ImageIcon,
   ArrowRight,
   CheckCircle2,
   ShieldCheck,
@@ -17,6 +16,7 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import ImageUpload from "@/components/image-upload";
 
 const SignupPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -37,6 +37,7 @@ const SignupPage = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
 
   // Password Validation
   const validatePassword = (password: string) => {
@@ -95,6 +96,11 @@ const SignupPage = () => {
   // Handle Form Submit
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (imageUploading) {
+      toast.info("Please wait for the image to finish uploading.");
+      return;
+    }
 
     const newErrors = {
       name: "",
@@ -441,28 +447,18 @@ const SignupPage = () => {
                 )}
               </div>
 
-              {/* Image URL */}
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-[#243b53]">
-                  Profile Image URL
-                </label>
-
-                <div className="relative">
-                  <ImageIcon
-                    size={18}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400"
-                  />
-
-                  <input
-                    type="url"
-                    name="image"
-                    value={formData.image}
-                    onChange={handleChange}
-                    placeholder="https://example.com/image.jpg"
-                    className="w-full rounded-xl border border-stone-200 bg-[#faf9f6] py-3.5 pl-11 pr-4 text-sm text-[#243b53] outline-none transition placeholder:text-stone-400 focus:border-[#d28b53] focus:ring-2 focus:ring-[#d28b53]/10"
-                  />
-                </div>
-              </div>
+              {/* Profile Image */}
+              <ImageUpload
+                label="Profile Image"
+                value={formData.image}
+                onChange={(url) =>
+                  setFormData((prev) => ({ ...prev, image: url }))
+                }
+                hint="Optional. JPG, PNG, WEBP or GIF up to 5 MB."
+                className="rounded-xl"
+                onUploadingChange={setImageUploading}
+                buttonClassName="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-stone-200 bg-[#faf9f6] px-4 py-3 text-sm font-semibold text-[#243b53] transition hover:border-[#d28b53] hover:text-[#d28b53] disabled:cursor-not-allowed disabled:opacity-60"
+              />
 
               {/* Role Tabs */}
               <div>
@@ -521,10 +517,14 @@ const SignupPage = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || imageUploading}
                 className="group mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#243b53] py-4 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition duration-300 hover:bg-[#d28b53] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSubmitting ? "Creating Account..." : "Create Account"}
+                {isSubmitting
+                  ? "Creating Account..."
+                  : imageUploading
+                    ? "Uploading image..."
+                    : "Create Account"}
 
                 {!isSubmitting && (
                   <ArrowRight

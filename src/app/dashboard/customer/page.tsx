@@ -52,12 +52,6 @@ const CustomerDashboardContent = async () => {
 
   const totalBookings = bookings.length;
 
-  const pendingBookings = bookings.filter((booking) =>
-    ["pending", "requested"].includes(
-      booking.status?.toLowerCase()
-    )
-  ).length;
-
   const completedBookings = bookings.filter(
     (booking) => booking.status?.toLowerCase() === "completed"
   ).length;
@@ -205,25 +199,25 @@ const CustomerDashboardContent = async () => {
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           icon={Wrench}
-          label="Total Bookings"
+          label="Total Requests"
           value={String(totalBookings)}
-          hint="All your service bookings"
+          hint="All your service requests"
           tone="tan"
         />
 
         <StatCard
           icon={Clock}
-          label="Active Bookings"
-          value={String(activeBookings + pendingBookings)}
-          hint="Pending and ongoing bookings"
+          label="Active Jobs"
+          value={String(activeBookings)}
+          hint="Accepted and ongoing jobs"
           tone="sky"
         />
 
         <StatCard
           icon={CheckCircle2}
-          label="Completed Bookings"
+          label="Completed Jobs"
           value={String(completedBookings)}
-          hint="Successfully completed"
+          hint="Successfully completed jobs"
           tone="emerald"
         />
       </div>

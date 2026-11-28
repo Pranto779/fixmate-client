@@ -5,17 +5,58 @@ import { useParams, useRouter } from "next/navigation";
 
 import {
   Wrench,
-  Image as ImageIcon,
   DollarSign,
   FileText,
   MapPin,
   Clock,
   Save,
   Loader2,
+  CheckCircle2,
 } from "lucide-react";
 
 import { toast } from "sonner";
 import { ServiceDatails, UpdateService } from "@/allapi";
+import ImageUpload from "@/components/image-upload";
+
+type FormField = 
+  | "title"
+  | "category"
+  | "price"
+  | "description"
+  | "image"
+  | "location"
+  | "estimatedDuration"
+  | "isAvailable";
+
+interface PendingField {
+  key: string;
+  label: string;
+  type: "New" | "Updated";
+}
+
+const fieldLabels: Record<string, string> = {
+  title: "Service Title",
+  category: "Category",
+  basePrice: "Price",
+  price: "Price",
+  description: "Description",
+  image: "Service Image",
+  serviceArea: "Location",
+  location: "Location",
+  estimatedDuration: "Estimated Duration",
+  isAvailable: "Availability",
+};
+
+const formToDatabase: Record<string, string> = {
+  title: "title",
+  category: "category",
+  price: "basePrice",
+  description: "description",
+  image: "image",
+  location: "serviceArea",
+  estimatedDuration: "estimatedDuration",
+  isAvailable: "isAvailable",
+};
 
 const UpdateMyserviceForm = () => {
   const params = useParams();
@@ -34,12 +75,32 @@ const UpdateMyserviceForm = () => {
     isAvailable: true,
   });
 
-  const [touchedFields, setTouchedFields] = useState<
-    Set<keyof typeof formData>
-  >(new Set());
+  const [originalData, setOriginalData] = useState<Record<string, unknown>>(
+    {}
+  );
+
+  const [touchedFields, setTouchedFields] = useState<Set<FormField>>(
+    new Set()
+  );
+
+  const [pendingFields, setPendingFields] = useState<PendingField[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const [hasPendingUpdate, setHasPendingUpdate] = useState(false);
+
+  // Check whether a field is new or updated
+  const getFieldType = (
+    field: string,
+    currentValue: unknown
+  ): "New" | "Updated" => {
+    const isEmpty =
+      currentValue === undefined ||
+      currentValue === null ||
+      currentValue === "";
+
+    return isEmpty ? "New" : "Updated";
+  };
 
   // Load Existing Service Data
   useEffect(() => {
@@ -66,6 +127,32 @@ const UpdateMyserviceForm = () => {
           estimatedDuration: service.estimatedDuration || "",
           isAvailable: service.isAvailable ?? true,
         });
+
+        setOriginalData({
+          title: service.title,
+          category: service.category,
+          basePrice: service.basePrice,
+          description: service.description,
+          image: service.image,
+          serviceArea: service.serviceArea,
+          estimatedDuration: service.estimatedDuration,
+          isAvailable: service.isAvailable,
+        });
+
+        const pending = service.pendingUpdates || {};
+
+        setHasPendingUpdate(service.hasPendingUpdate ?? false);
+
+        // Dynamic pending field names from database
+        const dynamicFields: PendingField[] = Object.keys(pending).map(
+          (key) => ({
+            key,
+            label: fieldLabels[key] || key,
+            type: getFieldType(key, service[key as keyof typeof service]),
+          })
+        );
+
+        setPendingFields(dynamicFields);
       } catch (error) {
         console.error("Service fetch error:", error);
         toast.error("Failed to load service!");
@@ -92,7 +179,7 @@ const UpdateMyserviceForm = () => {
 
     setTouchedFields((prev) => {
       const updated = new Set(prev);
-      updated.add(name as keyof typeof formData);
+      updated.add(name as FormField);
       return updated;
     });
   };
@@ -111,6 +198,19 @@ const UpdateMyserviceForm = () => {
     });
   };
 
+  // Dynamic fields currently being changed
+  const currentChangedFields: PendingField[] = Array.from(
+    touchedFields
+  ).map((field) => {
+    const databaseField = formToDatabase[field];
+
+    return {
+      key: databaseField,
+      label: fieldLabels[databaseField] || field,
+      type: getFieldType(databaseField, originalData[databaseField]),
+    };
+  });
+
   // Handle Form Submit
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -128,24 +228,11 @@ const UpdateMyserviceForm = () => {
     try {
       setLoading(true);
 
-      // Map Form Fields to Database Fields
-      const fieldMapping: Record<string, string> = {
-        title: "title",
-        category: "category",
-        price: "basePrice",
-        description: "description",
-        image: "image",
-        location: "serviceArea",
-        estimatedDuration: "estimatedDuration",
-        isAvailable: "isAvailable",
-      };
-
-      // Only Changed Fields
       const updatedData: Record<string, unknown> = {};
 
       touchedFields.forEach((field) => {
         const value = formData[field];
-        const databaseField = fieldMapping[field];
+        const databaseField = formToDatabase[field];
 
         updatedData[databaseField] =
           field === "price" ? Number(value) : value;
@@ -157,7 +244,9 @@ const UpdateMyserviceForm = () => {
       });
 
       if (result.success) {
-        toast.success("Update request sent to admin successfully!");
+        toast.success(
+          "Your changes have been submitted! Waiting for admin approval."
+        );
 
         router.push("/dashboard/technician/my-services");
         router.refresh();
@@ -204,6 +293,51 @@ const UpdateMyserviceForm = () => {
           for approval before going live.
         </p>
       </div>
+
+      {/* Existing Pending Update Notice */}
+      {hasPendingUpdate && (
+        <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <div className="flex items-start gap-3">
+            <Clock size={19} className="mt-0.5 shrink-0 text-amber-600" />
+
+            <div className="w-full">
+              <p className="text-sm font-bold text-amber-800">
+                Update Waiting for Admin Approval
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-amber-700">
+                Your previous approved information is still visible to
+                customers. These changes will be added or updated only
+                after admin approval.
+              </p>
+
+              {/* Dynamic Pending Fields */}
+              {pendingFields.length > 0 && (
+                <div className="mt-4">
+                  <p className="mb-2 text-xs font-bold text-amber-800">
+                    Fields Waiting for Approval:
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+                    {pendingFields.map((field) => (
+                      <span
+                        key={field.key}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800"
+                      >
+                        {field.label}
+
+                        <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold">
+                          {field.type}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Approval Notice */}
       <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -289,21 +423,24 @@ const UpdateMyserviceForm = () => {
         </div>
 
         {/* Image */}
-        <div>
-          <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#243b53]">
-            <ImageIcon size={17} />
-            Service Image URL
-          </label>
+        <ImageUpload
+          label="Service Image"
+          value={formData.image}
+          onChange={(url) => {
+            setFormData((prev) => ({ ...prev, image: url }));
 
-          <input
-            type="url"
-            name="image"
-            value={formData.image}
-            onChange={handleChange}
-            placeholder="Enter image URL"
-            className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#d28b53]"
-          />
-        </div>
+            // Must be marked touched or the change is dropped from
+            // the admin pending-update diff.
+            setTouchedFields((prev) => {
+              const updated = new Set(prev);
+              updated.add("image");
+              return updated;
+            });
+          }}
+          allowRemove
+          hint="JPG, PNG, WEBP or GIF up to 5 MB. Changes go live after admin approval."
+          className="rounded-lg"
+        />
 
         {/* Location and Duration */}
         <div className="grid gap-5 sm:grid-cols-2">
@@ -400,6 +537,37 @@ const UpdateMyserviceForm = () => {
             />
           </button>
         </div>
+
+        {/* Live Changed Fields Preview */}
+        {currentChangedFields.length > 0 && (
+          <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+            <div className="flex items-center gap-2 text-sm font-bold text-blue-800">
+              <CheckCircle2 size={17} />
+              Fields You Are Changing
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              {currentChangedFields.map((field) => (
+                <span
+                  key={field.key}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-800"
+                >
+                  {field.label}
+
+                  <span className="rounded-full bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold">
+                    {field.type}
+                  </span>
+                </span>
+              ))}
+            </div>
+
+            <p className="mt-3 text-xs leading-5 text-blue-700">
+              These fields will be added or updated after admin approval.
+              Until then, customers will continue to see the previously
+              approved information.
+            </p>
+          </div>
+        )}
 
         {/* Submit */}
         <button

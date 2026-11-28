@@ -9,27 +9,102 @@ import {
   MapPin,
   Truck,
   CheckCircle2,
-  AlertCircle,
 } from "lucide-react";
 
 import { getallServices, Service } from "@/allapi";
 import { connection } from "next/server";
 
+// Category Mapping
+const categoryMap: Record<string, string[]> = {
+  smartphone: ["Smartphone"],
+  "laptop-pc": ["Laptop & PC"],
+  ac: ["AC", "Air Conditioner"],
+  refrigerator: ["Refrigerator"],
+  tv: ["TV", "Television"],
+  "washing-machine": ["Washing Machine"],
+  electrical: ["Electrical"],
+};
+
+// Category Display Names
+const categoryNames: Record<string, string> = {
+  smartphone: "Smartphone",
+  "laptop-pc": "Laptop & PC",
+  ac: "Air Conditioner",
+  refrigerator: "Refrigerator",
+  tv: "TV",
+  "washing-machine": "Washing Machine",
+  electrical: "Electrical",
+};
+
 // Services Content
-const ServicesContent = async () => {
+interface ServicesContentProps {
+  searchParams: Promise<{
+    category?: string;
+  }>;
+}
+
+const ServicesContent = async ({
+  searchParams,
+}: ServicesContentProps) => {
   await connection();
+
+  const params = await searchParams;
+  const category = params.category?.toLowerCase();
 
   const allservices = await getallServices();
 
-  // Only Accepted Services
-  const services: Service[] = Array.isArray(allservices)
+  // Only Accepted and Available Services
+  const acceptedServices: Service[] = Array.isArray(allservices)
     ? allservices.filter(
-        (service: Service) => service.approvalStatus === "accepted"
+        (service: Service) =>
+          service.approvalStatus === "accepted" &&
+          service.isAvailable === true
       )
     : [];
 
+  // Category Filtering
+  const selectedCategories = category
+    ? categoryMap[category]
+    : undefined;
+
+  const services: Service[] = selectedCategories
+    ? acceptedServices.filter((service) =>
+        selectedCategories.some(
+          (item) =>
+            service.category?.trim().toLowerCase() ===
+            item.toLowerCase()
+        )
+      )
+    : acceptedServices;
+
+  const selectedCategoryName = category
+    ? categoryNames[category]
+    : undefined;
+
   return (
     <>
+      {/* Selected Category Heading */}
+      {selectedCategoryName && (
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#e9d8c5] bg-white p-5">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-[#d28b53]">
+              Selected Category
+            </p>
+
+            <h3 className="mt-1 text-xl font-bold text-[#243b53]">
+              {selectedCategoryName} Services
+            </h3>
+          </div>
+
+          <Link
+            href="/services"
+            className="rounded-lg bg-[#243b53] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#d28b53]"
+          >
+            View All Services
+          </Link>
+        </div>
+      )}
+
       {/* Services Grid */}
       {services.length > 0 ? (
         <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
@@ -113,14 +188,8 @@ const ServicesContent = async () => {
 
                 {/* Footer */}
                 <div className="mt-5 flex items-center justify-between border-t border-stone-100 pt-4">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      service.isAvailable
-                        ? "bg-green-50 text-green-700"
-                        : "bg-red-50 text-red-600"
-                    }`}
-                  >
-                    {service.isAvailable ? "Available" : "Unavailable"}
+                  <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                    Available
                   </span>
 
                   <Link
@@ -151,8 +220,19 @@ const ServicesContent = async () => {
           </h3>
 
           <p className="mt-2 text-sm text-[#718096]">
-            New services will appear here soon.
+            {selectedCategoryName
+              ? `No accepted and available ${selectedCategoryName} services found.`
+              : "New services will appear here soon."}
           </p>
+
+          {selectedCategoryName && (
+            <Link
+              href="/services"
+              className="mt-5 inline-flex rounded-lg bg-[#243b53] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#d28b53]"
+            >
+              Browse All Services
+            </Link>
+          )}
         </div>
       )}
     </>
@@ -179,7 +259,13 @@ const ServicesLoading = () => {
 };
 
 // Main Services Section
-const ServicesSection = () => {
+interface PageProps {
+  searchParams: Promise<{
+    category?: string;
+  }>;
+}
+
+const ServicesSection = ({ searchParams }: PageProps) => {
   return (
     <section className="relative overflow-hidden bg-[#faf9f6] px-5 py-20 lg:px-8">
       {/* Background Decoration */}
@@ -200,7 +286,9 @@ const ServicesSection = () => {
 
           <h2 className="text-3xl font-extrabold tracking-tight text-[#243b53] sm:text-4xl lg:text-5xl">
             Professional Services,
-            <span className="text-[#d28b53]"> Trusted Results.</span>
+            <span className="text-[#d28b53]">
+              {" "}Trusted Results.
+            </span>
           </h2>
 
           <p className="mt-5 text-sm leading-7 text-[#718096] sm:text-base">
@@ -211,7 +299,7 @@ const ServicesSection = () => {
 
         {/* Suspense */}
         <Suspense fallback={<ServicesLoading />}>
-          <ServicesContent />
+          <ServicesContent searchParams={searchParams} />
         </Suspense>
       </div>
     </section>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Eye,
   X,
@@ -68,6 +69,8 @@ const statusOptions = [
 ] as const;
 
 const ViewRequestedButton = ({ bookings }: Props) => {
+  const router = useRouter();
+
   const [open, setOpen] = useState(false);
 
   const [selectedBooking, setSelectedBooking] =
@@ -185,6 +188,9 @@ const ViewRequestedButton = ({ bookings }: Props) => {
       toast.success(
         result?.message || "Final amount saved successfully!"
       );
+
+      // Redirect after successful submission
+      router.push("/dashboard/technician/requests");
     } catch (error) {
       console.error("Final Amount Error:", error);
 
@@ -378,7 +384,7 @@ const ViewRequestedButton = ({ bookings }: Props) => {
                     </h3>
 
                     <p className="mt-1 text-sm text-slate-500">
-                      Base Price: ৳{selectedBooking.basePrice ?? 0}
+                      Base Price: ${selectedBooking.basePrice ?? 0}
                     </p>
                   </div>
                 </div>
@@ -499,7 +505,7 @@ const ViewRequestedButton = ({ bookings }: Props) => {
 
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 font-semibold text-slate-500">
-                        ৳
+                        $
                       </span>
 
                       <input
@@ -513,7 +519,7 @@ const ViewRequestedButton = ({ bookings }: Props) => {
                     </div>
 
                     <p className="mt-2 text-xs text-slate-500">
-                      Base Price: ৳{selectedBooking.basePrice ?? 0}
+                      Base Price: ${selectedBooking.basePrice ?? 0}
                     </p>
 
                     <button
